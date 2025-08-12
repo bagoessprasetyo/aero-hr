@@ -459,7 +459,7 @@ export function SalaryComponentManager({ employee, onUpdate }: SalaryComponentMa
                   Add Component
                 </ActionButton>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Add Salary Component</DialogTitle>
                   <DialogDescription>
@@ -587,7 +587,7 @@ export function SalaryComponentManager({ employee, onUpdate }: SalaryComponentMa
 
       {/* Edit Dialog */}
       <Dialog open={!!editingComponent} onOpenChange={() => setEditingComponent(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Salary Component</DialogTitle>
             <DialogDescription>
@@ -633,144 +633,222 @@ function SalaryComponentForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {mode === 'add' && (
-          <div>
-            <label className="text-sm font-medium text-gray-700 mb-4 block">
-              Salary Component Templates
-            </label>
-            <p className="text-sm text-gray-500 mb-4">
-              Choose from common Indonesian salary components or create a custom one
-            </p>
-            
-            {/* Template Categories */}
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {TEMPLATE_CATEGORIES.map((category) => {
-                const categoryTemplates = SALARY_TEMPLATES.filter(t => t.category === category.key)
-                if (categoryTemplates.length === 0) return null
-                
-                return (
-                  <div key={category.key}>
-                    <div className="flex items-center space-x-2 mb-3">
-                      <Badge className={category.color}>{category.label}</Badge>
-                      <span className="text-xs text-gray-400">
-                        {categoryTemplates.length} templates
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {categoryTemplates.map((template) => (
-                        <Button
-                          key={template.name}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onUseTemplate(template)}
-                          className="h-auto p-3 text-left justify-start hover:bg-blue-50 hover:border-blue-300 transition-all"
-                        >
-                          <div className="flex items-start space-x-2 w-full">
-                            <span className="text-base flex-shrink-0 mt-0.5">{template.icon}</span>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-gray-900 truncate">
-                                {template.name}
-                              </div>
-                              <div className="text-xs text-gray-500 truncate">
-                                {template.description}
-                              </div>
-                              <div className="text-xs font-medium text-blue-600 mt-1">
-                                {formatCurrency(template.suggested_amount)}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-4 block">
+                Salary Component Templates
+              </label>
+              <p className="text-sm text-gray-500 mb-4">
+                Choose from common Indonesian salary components or create a custom one
+              </p>
+              
+              {/* Template Categories */}
+              <div className="space-y-4 max-h-[500px] overflow-y-auto pr-4">
+                {TEMPLATE_CATEGORIES.map((category) => {
+                  const categoryTemplates = SALARY_TEMPLATES.filter(t => t.category === category.key)
+                  if (categoryTemplates.length === 0) return null
+                  
+                  return (
+                    <div key={category.key}>
+                      <div className="flex items-center space-x-2 mb-3">
+                        <Badge className={category.color}>{category.label}</Badge>
+                        <span className="text-xs text-gray-400">
+                          {categoryTemplates.length} templates
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2">
+                        {categoryTemplates.map((template) => (
+                          <Button
+                            key={template.name}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onUseTemplate(template)}
+                            className="h-auto p-3 text-left justify-start hover:bg-blue-50 hover:border-blue-300 transition-all"
+                          >
+                            <div className="flex items-start space-x-2 w-full">
+                              <span className="text-base flex-shrink-0 mt-0.5">{template.icon}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-gray-900 truncate">
+                                  {template.name}
+                                </div>
+                                <div className="text-xs text-gray-500 truncate">
+                                  {template.description}
+                                </div>
+                                <div className="text-xs font-medium text-blue-600 mt-1">
+                                  {formatCurrency(template.suggested_amount)}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </Button>
-                      ))}
+                          </Button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
+              
+              <Separator className="my-6" />
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-sm text-blue-800">
+                  💡 <strong>Tip:</strong> Template amounts are suggestions based on Indonesian market standards. 
+                  Adjust amounts according to your company policy and employee level.
+                </p>
+              </div>
             </div>
             
-            <Separator className="my-6" />
-            
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-sm text-blue-800">
-                💡 <strong>Tip:</strong> Template amounts are suggestions based on Indonesian market standards. 
-                Adjust amounts according to your company policy and employee level.
-              </p>
+            <div>
+              <Separator className="md:hidden my-6" />
+              
+              <div className="grid grid-cols-1 gap-6">
+                <FormField
+                  control={form.control}
+                  name="component_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Component Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Transport Allowance" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Descriptive name for this salary component
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="component_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Component Type *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="basic_salary">Basic Salary</SelectItem>
+                          <SelectItem value="fixed_allowance">Fixed Allowance</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Basic salary affects BPJS calculations differently
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem className="mt-6">
+                    <FormLabel>Monthly Amount *</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          placeholder="5000000"
+                          {...field}
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          className="pl-12"
+                        />
+                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                          Rp
+                        </div>
+                      </div>
+                    </FormControl>
+                    <FormDescription>
+                      Monthly amount in Indonesian Rupiah
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            
-            <Separator className="my-6" />
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="component_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Component Name *</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., Transport Allowance" {...field} />
-                </FormControl>
-                <FormDescription>
-                  Descriptive name for this salary component
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="component_type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Component Type *</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+        {mode === 'edit' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="component_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Component Name *</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
+                    <Input placeholder="e.g., Transport Allowance" {...field} />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="basic_salary">Basic Salary</SelectItem>
-                    <SelectItem value="fixed_allowance">Fixed Allowance</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Basic salary affects BPJS calculations differently
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+                  <FormDescription>
+                    Descriptive name for this salary component
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="amount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Monthly Amount *</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Input
-                    type="number"
-                    placeholder="5000000"
-                    {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                    className="pl-12"
-                  />
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                    Rp
-                  </div>
-                </div>
-              </FormControl>
-              <FormDescription>
-                Monthly amount in Indonesian Rupiah
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="component_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Component Type *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="basic_salary">Basic Salary</SelectItem>
+                      <SelectItem value="fixed_allowance">Fixed Allowance</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Basic salary affects BPJS calculations differently
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>Monthly Amount *</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        placeholder="5000000"
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        className="pl-12"
+                      />
+                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                        Rp
+                      </div>
+                    </div>
+                  </FormControl>
+                  <FormDescription>
+                    Monthly amount in Indonesian Rupiah
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
 
         <div className="flex justify-end space-x-4 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>

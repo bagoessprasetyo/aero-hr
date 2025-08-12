@@ -255,6 +255,7 @@ const navigationItems = [
   { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/dashboard' },
   { id: 'employees', label: 'Employees', icon: Users, href: '/employees' },
   { id: 'payroll', label: 'Payroll', icon: Calculator, href: '/payroll' },
+  { id: 'bulk-operations', label: 'Bulk Operations', icon: Receipt, href: '/bulk-operations' },
   { id: 'tax', label: 'Tax Reports', icon: FileText, href: '/tax' },
   { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/analytics' },
 ]
@@ -343,7 +344,7 @@ export function MainNav() {
           {/* Search and User Section */}
           <div className="flex items-center gap-4">
             {/* Search */}
-            <motion.form
+            {/* <motion.form
               onSubmit={handleSearch}
               className="relative hidden md:block"
               initial={{ width: 200, opacity: 0 }}
@@ -360,10 +361,10 @@ export function MainNav() {
                 onBlur={() => setIsSearchFocused(false)}
                 className="pl-10 pr-4 h-9 bg-accent/50 border border-border rounded-md text-sm focus:bg-background focus:ring-1 focus:ring-primary/20 focus:border-primary/20"
               />
-            </motion.form>
+            </motion.form> */}
 
             {/* Notifications */}
-            <motion.button
+            {/* <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               className="relative h-9 w-9 flex items-center justify-center rounded-md hover:bg-accent transition-colors"
@@ -373,7 +374,7 @@ export function MainNav() {
               <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full text-[10px] text-destructive-foreground flex items-center justify-center">
                 3
               </span>
-            </motion.button>
+            </motion.button> */}
 
             {/* Mobile Menu */}
             <button

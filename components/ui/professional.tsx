@@ -24,19 +24,19 @@ export function ProfessionalCard({
   children, 
   ...props 
 }: ProfessionalCardProps) {
-  const baseClasses = 'bg-white border border-gray-200 rounded-lg shadow-sm'
+  const baseClasses = 'bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl shadow-sm overflow-hidden'
   
   const variantClasses = {
     default: '',
-    elevated: 'shadow-md',
-    interactive: 'hover:shadow-md transition-shadow duration-200 cursor-pointer'
+    elevated: 'shadow-lg',
+    interactive: 'hover:shadow-lg transition-shadow duration-300 cursor-pointer'
   }
   
   const moduleClasses = module ? {
-    employee: 'border-l-4 border-l-employee-500',
-    salary: 'border-l-4 border-l-salary-500', 
-    payroll: 'border-l-4 border-l-payroll-500',
-    tax: 'border-l-4 border-l-primary-500'
+    employee: 'bg-employee-50',
+    salary: 'bg-salary-50', 
+    payroll: 'bg-payroll-50',
+    tax: 'bg-primary-50'
   }[module] : ''
   
   return (

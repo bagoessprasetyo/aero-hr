@@ -25,6 +25,8 @@ import { formatCurrency, formatNPWP } from "@/lib/utils/validation"
 import { calculateBPJS } from "@/lib/calculations/bpjs"
 import { calculatePPh21 } from "@/lib/calculations/pph21"
 import { SalaryComponentManager } from "@/components/employees/salary-component-manager"
+import { SalaryHistoryTimelineComponent } from "@/components/employees/salary-history-timeline"
+import { SalaryComparison } from "@/components/employees/salary-comparison"
 
 interface EmployeeDetailViewProps {
   employeeId: string
@@ -177,6 +179,8 @@ export function EmployeeDetailView({ employeeId }: EmployeeDetailViewProps) {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="salary">Salary Components</TabsTrigger>
+          <TabsTrigger value="salary-history">Salary History</TabsTrigger>
+          <TabsTrigger value="salary-comparison">Salary Analysis</TabsTrigger>
           <TabsTrigger value="calculations">Tax & BPJS</TabsTrigger>
           <TabsTrigger value="history">Employment History</TabsTrigger>
         </TabsList>
@@ -342,6 +346,14 @@ export function EmployeeDetailView({ employeeId }: EmployeeDetailViewProps) {
             employee={employee} 
             onUpdate={loadEmployeeDetails}
           />
+        </TabsContent>
+
+        <TabsContent value="salary-history" className="space-y-6">
+          <SalaryHistoryTimelineComponent employee={employee} />
+        </TabsContent>
+
+        <TabsContent value="salary-comparison" className="space-y-6">
+          <SalaryComparison employee={employee} />
         </TabsContent>
 
         <TabsContent value="calculations" className="space-y-6">

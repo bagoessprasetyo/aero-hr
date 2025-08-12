@@ -4,6 +4,8 @@ import "./globals.css";
 import { MainNav } from "@/components/layout/main-nav";
 import { UserNav } from "@/components/layout/user-nav";
 import { HeaderWrapper } from "@/components/layout/header-wrapper";
+import { ToastProvider } from "@/components/ui/toast";
+import { KeyboardShortcutsProvider, SkipToMainContent } from "@/components/common/keyboard-shortcuts";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -31,12 +33,17 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="flex min-h-screen flex-col">
-          <HeaderWrapper />
-          <main className="flex-1">
-            {children}
-          </main>
-        </div>
+        <ToastProvider>
+          <KeyboardShortcutsProvider>
+            <SkipToMainContent />
+            <HeaderWrapper />
+            <div className="container mx-auto flex min-h-screen flex-col">
+              <main id="main-content" className="flex-1 py-8">
+                {children}
+              </main>
+            </div>
+          </KeyboardShortcutsProvider>
+        </ToastProvider>
       </body>
     </html>
   );
