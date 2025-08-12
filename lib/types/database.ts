@@ -1,7 +1,7 @@
 export type EmploymentStatus = 'permanent' | 'contract'
 export type EmployeeStatus = 'active' | 'resigned' | 'terminated'
 export type PTKPStatus = 'TK/0' | 'TK/1' | 'TK/2' | 'TK/3' | 'K/0' | 'K/1' | 'K/2' | 'K/3'
-export type ComponentType = 'basic_salary' | 'fixed_allowance'
+export type ComponentType = 'basic_salary' | 'fixed_allowance' | 'deduction'
 export type PayrollStatus = 'draft' | 'calculated' | 'finalized'
 
 // Salary History Types
@@ -17,9 +17,13 @@ export type AuditType = 'salary_export' | 'pph21_report' | 'bpjs_report' | 'gove
 
 export interface AppConfiguration {
   id: string
-  key: string
-  value: string
-  description?: string
+  ptkp_amounts: any
+  tax_brackets: any
+  bpjs_rates: any
+  occupational_cost: any
+  effective_date: string
+  updated_by?: string
+  is_active: boolean
   created_at: string
   updated_at: string
 }

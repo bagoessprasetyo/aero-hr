@@ -19,6 +19,7 @@ import {
 import { VariableInputForm } from "@/components/payroll/variable-input-form"
 import { CalculationPreview } from "@/components/payroll/calculation-preview"
 import { FinalizationWorkflow } from "@/components/payroll/finalization-workflow"
+import { PayslipGenerator } from "@/components/payroll/payslip-generator"
 import { PayrollService } from "@/lib/services/payroll"
 import { formatCurrency } from "@/lib/utils/validation"
 import type { PayrollWithItems } from "@/lib/types/database"
@@ -55,7 +56,7 @@ export default function PayrollDetailPage() {
       
       // Set initial tab based on payroll status
       if (data?.status === 'finalized') {
-        setActiveTab('finalization')
+        setActiveTab('payslips')
       } else if (data?.status === 'calculated') {
         setActiveTab('review')
       } else {
@@ -85,7 +86,7 @@ export default function PayrollDetailPage() {
 
   const handleFinalized = () => {
     setRefreshTrigger(prev => prev + 1)
-    setActiveTab('finalization')
+    setActiveTab('payslips')
   }
 
   const getStatusInfo = (status: string) => {
@@ -235,7 +236,7 @@ export default function PayrollDetailPage() {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger 
             value="variables" 
             disabled={payroll.status === 'finalized'}
@@ -247,6 +248,12 @@ export default function PayrollDetailPage() {
           </TabsTrigger>
           <TabsTrigger value="finalization">
             Finalization
+          </TabsTrigger>
+          <TabsTrigger 
+            value="payslips" 
+            disabled={payroll.status !== 'finalized'}
+          >
+            Payslips
           </TabsTrigger>
         </TabsList>
 
@@ -334,6 +341,16 @@ export default function PayrollDetailPage() {
             <FinalizationWorkflow 
               payrollId={payrollId}
               onFinalized={handleFinalized}
+            />
+          </div>
+        </TabsContent>
+
+        {/* Payslips Tab */}
+        <TabsContent value="payslips">
+          <div className="space-y-6">
+            <PayslipGenerator 
+              payrollId={payrollId}
+              payrollPeriod={payroll}
             />
           </div>
         </TabsContent>

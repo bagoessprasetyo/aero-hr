@@ -108,7 +108,7 @@ export const salaryComponentSchema = z.object({
     .string()
     .min(2, 'Component name must be at least 2 characters')
     .max(100, 'Component name must be at most 100 characters'),
-  component_type: z.enum(['basic_salary', 'fixed_allowance']),
+  component_type: z.enum(['basic_salary', 'fixed_allowance', 'deduction']),
   amount: z
     .number()
     .min(0, 'Amount must be positive')

@@ -37,6 +37,8 @@ import type {
 } from "@/lib/types/database"
 import { formatCurrency } from "@/lib/utils/validation"
 import { cn } from "@/lib/utils"
+import * as XLSX from 'xlsx'
+import { saveAs } from 'file-saver'
 
 interface SalaryExportProps {
   className?: string
@@ -166,41 +168,34 @@ export function SalaryExport({ className }: SalaryExportProps) {
       )
 
       // Create and download file based on format
-      let content = ''
-      let mimeType = ''
-      let filename = ''
+      const filename = `salary-export-${exportFilters.exportType}-${exportFilters.startDate}-${exportFilters.endDate}`
 
       switch (exportFilters.exportFormat) {
         case 'csv':
-          content = generateCSVContent(exportData.data)
-          mimeType = 'text/csv'
-          filename = `salary-export-${exportFilters.exportType}-${exportFilters.startDate}-${exportFilters.endDate}.csv`
+          const csvContent = generateCSVContent(exportData.data)
+          const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' })
+          saveAs(csvBlob, `${filename}.csv`)
           break
+          
         case 'excel':
-          // In real implementation, would use a library like xlsx
-          content = generateCSVContent(exportData.data) // Fallback to CSV for now
-          mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-          filename = `salary-export-${exportFilters.exportType}-${exportFilters.startDate}-${exportFilters.endDate}.xlsx`
+          const workbook = generateExcelFile(exportData.data)
+          if (workbook) {
+            const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+            const excelBlob = new Blob([excelBuffer], { 
+              type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+            })
+            saveAs(excelBlob, `${filename}.xlsx`)
+          }
           break
+          
         case 'pdf':
-          // In real implementation, would use a PDF library
-          content = generateTextReport(exportData.data)
-          mimeType = 'application/pdf'
-          filename = `salary-report-${exportFilters.exportType}-${exportFilters.startDate}-${exportFilters.endDate}.pdf`
+          // For PDF, we'll create a simple text-based report
+          // In a real implementation, you might want to use a PDF library
+          const textContent = generateTextReport(exportData.data)
+          const textBlob = new Blob([textContent], { type: 'text/plain;charset=utf-8' })
+          saveAs(textBlob, `${filename}.txt`)
           break
       }
-
-      // Trigger download
-      const blob = new Blob([content], { type: mimeType })
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.setAttribute('hidden', '')
-      a.setAttribute('href', url)
-      a.setAttribute('download', filename)
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      window.URL.revokeObjectURL(url)
 
       // Reset preview
       setExportPreview(null)
@@ -215,8 +210,114 @@ export function SalaryExport({ className }: SalaryExportProps) {
     if (data.length === 0) return ''
     
     const headers = Object.keys(data[0]).join(',')
-    const rows = data.map(row => Object.values(row).join(','))
+    const rows = data.map(row => 
+      Object.values(row).map(value => 
+        typeof value === 'string' && value.includes(',') 
+          ? `"${value}"` 
+          : value
+      ).join(',')
+    )
     return [headers, ...rows].join('\n')
+  }
+
+  const generateExcelFile = (data: any[]) => {
+    if (data.length === 0) return null
+
+    // Create a new workbook
+    const wb = XLSX.utils.book_new()
+    
+    // Summary worksheet
+    const summaryData = [
+      ['Laporan Ekspor Gaji'],
+      ['Tanggal Dibuat', new Date().toLocaleDateString('id-ID')],
+      ['Periode', `${exportFilters.startDate} s/d ${exportFilters.endDate}`],
+      ['Jenis Laporan', getExportTypeDescription()],
+      ['Total Karyawan', data.length],
+      [],
+      ['Ringkasan Statistik'],
+    ]
+
+    if (data.length > 0) {
+      // Add statistical summary if data contains salary information
+      const totalGrossField = data.find(item => 
+        Object.keys(item).some(key => 
+          key.toLowerCase().includes('gross') || key.toLowerCase().includes('kotor')
+        )
+      )
+      
+      if (totalGrossField) {
+        const grossFieldName = Object.keys(totalGrossField).find(key => 
+          key.toLowerCase().includes('gross') || key.toLowerCase().includes('kotor')
+        )
+        if (grossFieldName) {
+          const totalGross = data.reduce((sum, item) => sum + (parseFloat(item[grossFieldName]) || 0), 0)
+          const avgGross = totalGross / data.length
+          summaryData.push(
+            ['Total Gaji Kotor', formatCurrency(totalGross)],
+            ['Rata-rata Gaji', formatCurrency(avgGross)]
+          )
+        }
+      }
+    }
+
+    const summaryWs = XLSX.utils.aoa_to_sheet(summaryData)
+    
+    // Set column widths for summary
+    summaryWs['!cols'] = [{ wch: 20 }, { wch: 30 }]
+    
+    // Style the header
+    const headerRange = XLSX.utils.decode_range(summaryWs['!ref'] || 'A1')
+    for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
+      const cellRef = XLSX.utils.encode_cell({ r: 0, c: C })
+      if (!summaryWs[cellRef]) continue
+      summaryWs[cellRef].s = {
+        font: { bold: true, sz: 14 },
+        fill: { fgColor: { rgb: "2563eb" } }
+      }
+    }
+    
+    XLSX.utils.book_append_sheet(wb, summaryWs, 'Ringkasan')
+    
+    // Detail worksheet
+    const detailWs = XLSX.utils.json_to_sheet(data)
+    
+    // Auto-fit columns
+    const range = XLSX.utils.decode_range(detailWs['!ref'] || 'A1')
+    const colWidths: any[] = []
+    
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      let maxWidth = 10
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
+        const cell = detailWs[cellRef]
+        if (cell && cell.v) {
+          const cellLength = cell.v.toString().length
+          if (cellLength > maxWidth) maxWidth = cellLength
+        }
+      }
+      colWidths.push({ wch: Math.min(maxWidth + 2, 50) })
+    }
+    detailWs['!cols'] = colWidths
+    
+    // Style the header row
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cellRef = XLSX.utils.encode_cell({ r: 0, c: C })
+      if (!detailWs[cellRef]) continue
+      detailWs[cellRef].s = {
+        font: { bold: true },
+        fill: { fgColor: { rgb: "f3f4f6" } },
+        border: {
+          top: { style: "thin" },
+          bottom: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: "thin" }
+        }
+      }
+    }
+    
+    XLSX.utils.book_append_sheet(wb, detailWs, 'Data Detail')
+    
+    return wb
   }
 
   const generateTextReport = (data: any[]) => {

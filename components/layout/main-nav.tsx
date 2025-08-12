@@ -255,6 +255,7 @@ const navigationItems = [
   { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/dashboard' },
   { id: 'employees', label: 'Employees', icon: Users, href: '/employees' },
   { id: 'payroll', label: 'Payroll', icon: Calculator, href: '/payroll' },
+  { id: 'admin', label: 'Admin', icon: Settings, href: '/admin' },
   { id: 'bulk-operations', label: 'Bulk Operations', icon: Receipt, href: '/bulk-operations' },
   { id: 'tax', label: 'Tax Reports', icon: FileText, href: '/tax' },
   { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/analytics' },
