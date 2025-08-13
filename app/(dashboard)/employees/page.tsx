@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { ProtectedRoute } from "@/components/rbac/protected-route"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,6 +20,14 @@ import { formatCurrency } from "@/lib/utils/validation"
 const employeeService = new EmployeeService()
 
 export default function EmployeesPage() {
+  return (
+    <ProtectedRoute permission="employees.read">
+      <EmployeesPageContent />
+    </ProtectedRoute>
+  )
+}
+
+function EmployeesPageContent() {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")

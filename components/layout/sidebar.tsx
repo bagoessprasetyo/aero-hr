@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { createClient } from "@/lib/supabase/client"
 import { useSidebar } from "./sidebar-provider"
+import { usePermissions } from "@/lib/contexts/rbac-context"
+import { Can } from "@/components/rbac/permission-guard"
 import {
   Sidebar as SidebarPrimitive,
   SidebarHeader,
@@ -46,33 +48,33 @@ import {
   X,
 } from "lucide-react"
 
-// Navigation items configuration
+// Navigation items configuration with permissions
 const navigationItems = [
   {
     id: 'main',
     title: 'Main',
     items: [
-      { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/dashboard' },
-      { id: 'employees', label: 'Employees', icon: Users, href: '/employees' },
-      { id: 'payroll', label: 'Payroll', icon: Calculator, href: '/payroll' },
+      { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/dashboard', permission: null },
+      { id: 'employees', label: 'Employees', icon: Users, href: '/employees', permission: 'employees.read' },
+      { id: 'payroll', label: 'Payroll', icon: Calculator, href: '/payroll', permission: 'payroll.read' },
     ]
   },
   {
     id: 'management',
     title: 'Management',
     items: [
-      { id: 'bulk-operations', label: 'Bulk Operations', icon: Receipt, href: '/bulk-operations' },
-      { id: 'admin', label: 'Admin', icon: Settings, href: '/admin' },
-      { id: 'tax', label: 'Tax Reports', icon: FileText, href: '/tax' },
+      { id: 'bulk-operations', label: 'Bulk Operations', icon: Receipt, href: '/bulk-operations', permission: 'bulk_operations.read' },
+      { id: 'admin', label: 'Admin', icon: Settings, href: '/admin', permission: 'admin.read' },
+      { id: 'tax', label: 'Tax Reports', icon: FileText, href: '/tax', permission: 'reports.read' },
     ]
   },
-  {
-    id: 'insights',
-    title: 'Insights',
-    items: [
-      { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/analytics' },
-    ]
-  }
+  // {
+  //   id: 'insights',
+  //   title: 'Insights',
+  //   items: [
+  //     { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/analytics', permission: 'reports.read' },
+  //   ]
+  // }
 ]
 
 // User profile dropdown component for sidebar
@@ -211,6 +213,7 @@ interface NavItemProps {
     label: string
     icon: React.ComponentType<any>
     href: string
+    permission?: string | null
   }
   isActive: boolean
   isExpanded: boolean
@@ -265,6 +268,7 @@ export function Sidebar() {
   const router = useRouter()
   const supabase = createClient()
   const { isExpanded, isMobileOpen, toggleExpanded, setMobileOpen } = useSidebar()
+  const { hasPermission, canAccess } = usePermissions()
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -310,7 +314,7 @@ export function Sidebar() {
         }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className={cn(
-          "fixed left-0 top-0 z-50 h-full bg-background border-r border-border lg:relative",
+          "fixed left-0 top-0 z-50 min-h-screen bg-background border-r border-border lg:relative",
           // Mobile: hidden by default, shown when isMobileOpen is true
           "translate-x-[-100%] lg:translate-x-0",
           isMobileOpen && "translate-x-0"
@@ -376,33 +380,47 @@ export function Sidebar() {
           {/* Navigation Content */}
           <SidebarContent className={cn(!isExpanded && "px-2")}>
             <SidebarNav>
-              {navigationItems.map((group) => (
-                <SidebarNavGroup key={group.id}>
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <SidebarNavGroupTitle>{group.title}</SidebarNavGroupTitle>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                  <div className="space-y-1">
-                    {group.items.map((item) => (
-                      <NavItem
-                        key={item.id}
-                        item={item}
-                        isActive={pathname?.startsWith(item.href) || false}
-                        isExpanded={isExpanded}
-                        onClick={handleItemClick}
-                      />
-                    ))}
-                  </div>
-                </SidebarNavGroup>
-              ))}
+              {navigationItems.map((group) => {
+                // Filter items based on permissions
+                const visibleItems = group.items.filter((item) => {
+                  if (!item.permission) return true; // Always show items without permission requirements
+                  
+                  // Parse permission format "module.action"
+                  const [module, action] = item.permission.split('.')
+                  return canAccess(module, action)
+                });
+
+                // Don't render group if no items are visible
+                if (visibleItems.length === 0) return null;
+
+                return (
+                  <SidebarNavGroup key={group.id}>
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <SidebarNavGroupTitle>{group.title}</SidebarNavGroupTitle>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                    <div className="space-y-1">
+                      {visibleItems.map((item) => (
+                        <NavItem
+                          key={item.id}
+                          item={item}
+                          isActive={pathname?.startsWith(item.href) || false}
+                          isExpanded={isExpanded}
+                          onClick={handleItemClick}
+                        />
+                      ))}
+                    </div>
+                  </SidebarNavGroup>
+                );
+              })}
             </SidebarNav>
           </SidebarContent>
 

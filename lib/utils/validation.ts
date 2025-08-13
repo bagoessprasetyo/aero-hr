@@ -156,45 +156,5 @@ export const formatEmployeeId = (value: string): string => {
   return value.toUpperCase().replace(/[^A-Z0-9]/g, '')
 }
 
-// Department and position suggestions (can be moved to database later)
-export const commonDepartments = [
-  'IT',
-  'Human Resources', 
-  'Finance',
-  'Operations',
-  'Marketing',
-  'Sales',
-  'Production',
-  'Quality Assurance',
-  'Administration',
-  'Legal'
-]
-
-export const commonPositions = [
-  'Software Engineer',
-  'Senior Software Engineer',
-  'Project Manager',
-  'Product Manager',
-  'HR Specialist',
-  'Finance Analyst',
-  'Marketing Specialist',
-  'Sales Representative',
-  'Operations Manager',
-  'Administrative Assistant'
-]
-
-export const indonesianBanks = [
-  'BCA',
-  'BRI',
-  'BNI',
-  'Mandiri',
-  'CIMB Niaga',
-  'Danamon',
-  'Permata',
-  'OCBC NISP',
-  'Maybank',
-  'Panin',
-  'BTN',
-  'BJB',
-  'BII'
-]
+// Note: Department, position, and bank data is now managed through the master data system
+// See /admin for master data management interface

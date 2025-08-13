@@ -1,5 +1,6 @@
 "use client"
 
+import { ProtectedRoute } from "@/components/rbac/protected-route"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BulkOperations } from "@/components/salary/bulk-operations"
 import { SalaryExport } from "@/components/reports/salary-export"
@@ -12,7 +13,8 @@ import {
 
 export default function BulkOperationsPage() {
   return (
-    <div className="space-y-6">
+    <ProtectedRoute permission="bulk_operations.read">
+      <div className="space-y-6">
       {/* Page Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Bulk Operations</h1>
@@ -42,6 +44,7 @@ export default function BulkOperationsPage() {
           <SalaryExport />
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </ProtectedRoute>
   )
 }

@@ -18,12 +18,11 @@ import {
   formatNIK, 
   formatNPWP, 
   formatPhone, 
-  formatEmployeeId,
-  commonDepartments,
-  commonPositions,
-  indonesianBanks
+  formatEmployeeId
 } from "@/lib/utils/validation"
 import { EmployeeService } from "@/lib/services/employees"
+import { MasterDataService } from "@/lib/services/master-data"
+import type { Department, Position, Bank } from "@/lib/types/master-data"
 import type { z } from "zod"
 
 type EmployeeFormData = z.infer<typeof employeeFormSchema>
@@ -33,12 +32,20 @@ interface EditEmployeeFormProps {
 }
 
 const employeeService = new EmployeeService()
+const masterDataService = new MasterDataService()
 
 export function EditEmployeeForm({ employeeId }: EditEmployeeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [submitError, setSubmitError] = useState("")
   const router = useRouter()
+  
+  // Master data states
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [positions, setPositions] = useState<Position[]>([])
+  const [banks, setBanks] = useState<Bank[]>([])
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("")
+  const [loadingMasterData, setLoadingMasterData] = useState(true)
 
   const form = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeFormSchema),
@@ -52,8 +59,54 @@ export function EditEmployeeForm({ employeeId }: EditEmployeeFormProps) {
   })
 
   useEffect(() => {
-    loadEmployeeData()
+    Promise.all([
+      loadEmployeeData(),
+      loadMasterData()
+    ])
   }, [employeeId])
+
+  // Load master data on component mount
+  const loadMasterData = async () => {
+    try {
+      setLoadingMasterData(true)
+      const [departmentsData, banksData] = await Promise.all([
+        masterDataService.getActiveDepartments(),
+        masterDataService.getActiveBanks()
+      ])
+      
+      setDepartments(departmentsData)
+      setBanks(banksData)
+    } catch (error) {
+      console.error('Error loading master data:', error)
+    } finally {
+      setLoadingMasterData(false)
+    }
+  }
+
+  // Load positions when department changes
+  useEffect(() => {
+    const loadPositions = async () => {
+      if (selectedDepartment) {
+        try {
+          const positionsData = await masterDataService.getActivePositions(selectedDepartment)
+          setPositions(positionsData)
+        } catch (error) {
+          console.error('Error loading positions:', error)
+        }
+      } else {
+        setPositions([])
+      }
+    }
+
+    loadPositions()
+  }, [selectedDepartment])
+
+  // Handle department change
+  const handleDepartmentChange = (departmentId: string) => {
+    setSelectedDepartment(departmentId)
+    // Clear position when department changes
+    form.setValue('position_title', '')
+  }
 
   const loadEmployeeData = async () => {
     try {
@@ -85,6 +138,12 @@ export function EditEmployeeForm({ employeeId }: EditEmployeeFormProps) {
         bpjs_health_enrolled: employee.bpjs_health_enrolled,
         bpjs_manpower_enrolled: employee.bpjs_manpower_enrolled,
       })
+
+      // Set selected department to load positions
+      const department = departments.find(d => d.department_name === employee.department)
+      if (department) {
+        setSelectedDepartment(department.id)
+      }
     } catch (error: any) {
       setSubmitError(error.message || "Failed to load employee data")
     } finally {
@@ -344,13 +403,31 @@ export function EditEmployeeForm({ employeeId }: EditEmployeeFormProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="position_title"
+                    name="department"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Position Title *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Software Engineer" {...field} />
-                        </FormControl>
+                        <FormLabel>Department *</FormLabel>
+                        <Select 
+                          onValueChange={(value) => {
+                            field.onChange(value)
+                            handleDepartmentChange(value)
+                          }} 
+                          value={field.value}
+                          disabled={loadingMasterData}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={loadingMasterData ? "Loading departments..." : "Select department"} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {departments.map((dept) => (
+                              <SelectItem key={dept.id} value={dept.department_name}>
+                                {dept.department_name} ({dept.department_code})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -358,13 +435,37 @@ export function EditEmployeeForm({ employeeId }: EditEmployeeFormProps) {
                   
                   <FormField
                     control={form.control}
-                    name="department"
+                    name="position_title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Department *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="IT" {...field} />
-                        </FormControl>
+                        <FormLabel>Position Title *</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          value={field.value}
+                          disabled={!selectedDepartment || positions.length === 0}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={
+                                !selectedDepartment 
+                                  ? "Select department first" 
+                                  : positions.length === 0 
+                                    ? "No positions available" 
+                                    : "Select position"
+                              } />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {positions.map((position) => (
+                              <SelectItem key={position.id} value={position.position_title}>
+                                {position.position_title} (Level {position.position_level})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          {selectedDepartment && positions.length === 0 && "No positions found for this department"}
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -453,9 +554,24 @@ export function EditEmployeeForm({ employeeId }: EditEmployeeFormProps) {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Bank Name *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="BCA" {...field} />
-                        </FormControl>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          value={field.value}
+                          disabled={loadingMasterData}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={loadingMasterData ? "Loading banks..." : "Select bank"} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {banks.map((bank) => (
+                              <SelectItem key={bank.id} value={bank.bank_name}>
+                                {bank.bank_name} ({bank.bank_code})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}

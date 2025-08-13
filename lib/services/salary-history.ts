@@ -110,7 +110,7 @@ export class SalaryHistoryService {
     filters: SalaryHistoryFilters = {}
   ): Promise<SalaryHistoryTimeline[]> {
     let query = this.supabase
-      .from('employee_salary_timeline')
+      .from('employee_change_log')
       .select('*')
       .eq('employee_id', employeeId)
       .order('change_date', { ascending: false })
@@ -236,10 +236,10 @@ export class SalaryHistoryService {
     } = {}
   ): Promise<SalaryHistoryTimeline[]> {
     let query = this.supabase
-      .from('employee_salary_timeline')
+      .from('employee_change_log')
       .select('*')
-      .gte('effective_date', startDate)
-      .lte('effective_date', endDate)
+      .gte('change_date', startDate)
+      .lte('change_date', endDate)
       .order('change_date', { ascending: false })
 
     if (filters.employeeIds?.length) {
@@ -536,6 +536,421 @@ export class SalaryHistoryService {
     return data
   }
 
+  // Create bulk salary operation record
+  async createBulkSalaryOperation(operation: {
+    operation_type: BulkOperationType
+    operation_name: string
+    operation_description?: string
+    adjustment_type: AdjustmentType
+    adjustment_value?: number
+    effective_date: string
+    department_filter?: string
+    position_filter?: string
+    salary_range_filter?: Record<string, any>
+    employee_ids: string[]
+    preview_data: Array<{
+      employee_id: string
+      previous_gross_salary: number
+      new_gross_salary: number
+      salary_change_amount: number
+      component_changes: Record<string, any>
+    }>
+    total_cost_impact: number
+    created_by: string
+  }): Promise<{ success: boolean; operation_id?: string; error?: string }> {
+    try {
+      // Create main operation record
+      const { data: bulkOp, error: opError } = await this.supabase
+        .from('bulk_salary_operations')
+        .insert({
+          operation_type: operation.operation_type,
+          operation_name: operation.operation_name,
+          operation_description: operation.operation_description,
+          affected_employees_count: operation.employee_ids.length,
+          department_filter: operation.department_filter,
+          position_filter: operation.position_filter,
+          salary_range_filter: operation.salary_range_filter,
+          adjustment_type: operation.adjustment_type,
+          adjustment_value: operation.adjustment_value,
+          total_cost_impact: operation.total_cost_impact,
+          total_employees_affected: operation.employee_ids.length,
+          effective_date: operation.effective_date,
+          operation_status: 'draft',
+          created_by: operation.created_by
+        })
+        .select('id')
+        .single()
+
+      if (opError) throw opError
+
+      // Create individual operation items
+      const operationItems = operation.preview_data.map(item => ({
+        bulk_operation_id: bulkOp.id,
+        employee_id: item.employee_id,
+        previous_gross_salary: item.previous_gross_salary,
+        new_gross_salary: item.new_gross_salary,
+        salary_change_amount: item.salary_change_amount,
+        component_changes: item.component_changes,
+        item_status: 'pending' as const
+      }))
+
+      const { error: itemsError } = await this.supabase
+        .from('bulk_salary_operation_items')
+        .insert(operationItems)
+
+      if (itemsError) throw itemsError
+
+      return { success: true, operation_id: bulkOp.id }
+    } catch (error: any) {
+      console.error('Error creating bulk salary operation:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  // Execute bulk salary operation
+  async executeBulkSalaryOperation(
+    operationId: string,
+    executedBy: string,
+    onProgress?: (progress: { completed: number; total: number; current?: string }) => void
+  ): Promise<{ success: boolean; results?: any; error?: string }> {
+    try {
+      // Get operation details
+      const { data: operation, error: opError } = await this.supabase
+        .from('bulk_salary_operations')
+        .select(`
+          *,
+          bulk_salary_operation_items(*)
+        `)
+        .eq('id', operationId)
+        .single()
+
+      if (opError) throw opError
+      if (!operation) throw new Error('Bulk operation not found')
+
+      // Update operation status to executing
+      await this.supabase
+        .from('bulk_salary_operations')
+        .update({
+          operation_status: 'executing',
+          executed_at: new Date().toISOString(),
+          executed_by: executedBy
+        })
+        .eq('id', operationId)
+
+      const items = operation.bulk_salary_operation_items
+      const results = { successful: 0, failed: 0, errors: [] as any[] }
+
+      // Process each employee in the bulk operation
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        
+        // Report progress
+        if (onProgress) {
+          onProgress({
+            completed: i,
+            total: items.length,
+            current: `Processing employee ${item.employee_id}`
+          })
+        }
+
+        try {
+          // Get employee current salary components
+          const { data: employee, error: empError } = await this.supabase
+            .from('employees')
+            .select(`
+              *,
+              salary_components(*)
+            `)
+            .eq('id', item.employee_id)
+            .single()
+
+          if (empError) throw empError
+
+          // Apply salary changes based on operation type
+          await this.applySalaryChangesToEmployee(
+            item.employee_id,
+            operation.adjustment_type,
+            operation.adjustment_value || 0,
+            item.component_changes,
+            operation.effective_date,
+            executedBy,
+            `Bulk operation: ${operation.operation_name}`
+          )
+
+          // Update item status to applied
+          await this.supabase
+            .from('bulk_salary_operation_items')
+            .update({ item_status: 'applied' })
+            .eq('id', item.id)
+
+          results.successful++
+        } catch (error: any) {
+          // Update item status to failed
+          await this.supabase
+            .from('bulk_salary_operation_items')
+            .update({ 
+              item_status: 'failed',
+              error_message: error.message 
+            })
+            .eq('id', item.id)
+
+          results.failed++
+          results.errors.push({
+            employee_id: item.employee_id,
+            error: error.message
+          })
+        }
+      }
+
+      // Update operation status to completed or partially failed
+      const finalStatus = results.failed > 0 ? 'partially_completed' : 'completed'
+      await this.supabase
+        .from('bulk_salary_operations')
+        .update({
+          operation_status: finalStatus,
+          completed_at: new Date().toISOString(),
+          successful_items: results.successful,
+          failed_items: results.failed
+        })
+        .eq('id', operationId)
+
+      // Final progress update
+      if (onProgress) {
+        onProgress({
+          completed: items.length,
+          total: items.length,
+          current: 'Operation completed'
+        })
+      }
+
+      return { success: true, results }
+    } catch (error: any) {
+      // Mark operation as failed
+      await this.supabase
+        .from('bulk_salary_operations')
+        .update({
+          operation_status: 'failed',
+          error_message: error.message
+        })
+        .eq('id', operationId)
+
+      console.error('Error executing bulk salary operation:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  // Apply salary changes to individual employee
+  private async applySalaryChangesToEmployee(
+    employeeId: string,
+    adjustmentType: AdjustmentType,
+    adjustmentValue: number,
+    componentChanges: Record<string, any>,
+    effectiveDate: string,
+    changedBy: string,
+    changeReason: string
+  ): Promise<void> {
+    // Get current salary components
+    const { data: components, error: compError } = await this.supabase
+      .from('salary_components')
+      .select('*')
+      .eq('employee_id', employeeId)
+      .eq('is_active', true)
+
+    if (compError) throw compError
+
+    const changes = []
+
+    // Process each salary component
+    for (const component of components || []) {
+      let newAmount = component.amount
+
+      // Apply adjustment based on type
+      switch (adjustmentType) {
+        case 'percentage':
+          newAmount = component.amount * (1 + adjustmentValue / 100)
+          break
+        case 'fixed_amount':
+          // Only apply to basic salary for fixed amount increases
+          if (component.component_type === 'basic_salary') {
+            newAmount = component.amount + adjustmentValue
+          }
+          break
+        case 'new_structure':
+          // Use component-specific changes from componentChanges
+          if (componentChanges[component.id]) {
+            newAmount = componentChanges[component.id]
+          }
+          break
+      }
+
+      // Round to nearest hundred
+      newAmount = Math.round(newAmount / 100) * 100
+
+      if (newAmount !== component.amount) {
+        // Update the salary component
+        await this.supabase
+          .from('salary_components')
+          .update({
+            amount: newAmount,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', component.id)
+
+        // Record the change in history
+        changes.push({
+          componentId: component.id,
+          componentName: component.component_name,
+          componentType: component.component_type,
+          previousAmount: component.amount,
+          newAmount: newAmount,
+          previousStatus: component.is_active,
+          newStatus: component.is_active,
+          actionType: 'UPDATE' as SalaryActionType
+        })
+      }
+    }
+
+    // Log the salary changes
+    if (changes.length > 0) {
+      await this.logSalaryChange(employeeId, changes, {
+        changeReason,
+        effectiveDate,
+        changedBy,
+        approvalStatus: 'auto_approved'
+      })
+    }
+  }
+
+  // Get bulk operation history
+  async getBulkOperationHistory(filters: {
+    operation_type?: BulkOperationType
+    start_date?: string
+    end_date?: string
+    created_by?: string
+    status?: string
+    limit?: number
+  } = {}): Promise<BulkSalaryOperation[]> {
+    let query = this.supabase
+      .from('bulk_salary_operations')
+      .select(`
+        *,
+        bulk_salary_operation_items(count)
+      `)
+      .order('created_at', { ascending: false })
+
+    if (filters.operation_type) {
+      query = query.eq('operation_type', filters.operation_type)
+    }
+    if (filters.start_date) {
+      query = query.gte('created_at', filters.start_date)
+    }
+    if (filters.end_date) {
+      query = query.lte('created_at', filters.end_date)
+    }
+    if (filters.created_by) {
+      query = query.eq('created_by', filters.created_by)
+    }
+    if (filters.status) {
+      query = query.eq('operation_status', filters.status)
+    }
+    if (filters.limit) {
+      query = query.limit(filters.limit)
+    }
+
+    const { data, error } = await query
+
+    if (error) throw error
+    return data || []
+  }
+
+  // Get bulk operation details by ID
+  async getBulkOperationById(operationId: string): Promise<BulkSalaryOperation | null> {
+    const { data, error } = await this.supabase
+      .from('bulk_salary_operations')
+      .select(`
+        *,
+        bulk_salary_operation_items(*)
+      `)
+      .eq('id', operationId)
+      .single()
+
+    if (error) throw error
+    return data
+  }
+
+  // Cancel bulk operation
+  async cancelBulkOperation(
+    operationId: string,
+    cancelledBy: string,
+    reason?: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      await this.supabase
+        .from('bulk_salary_operations')
+        .update({
+          operation_status: 'cancelled',
+          cancelled_at: new Date().toISOString(),
+          cancelled_by: cancelledBy,
+          cancellation_reason: reason
+        })
+        .eq('id', operationId)
+
+      return { success: true }
+    } catch (error: any) {
+      console.error('Error cancelling bulk operation:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  // Get bulk operation statistics
+  async getBulkOperationStats(filters: {
+    start_date?: string
+    end_date?: string
+    created_by?: string
+  } = {}): Promise<{
+    total_operations: number
+    total_employees_affected: number
+    total_cost_impact: number
+    operations_by_type: Record<string, number>
+    operations_by_status: Record<string, number>
+  }> {
+    let query = this.supabase
+      .from('bulk_salary_operations')
+      .select('*')
+
+    if (filters.start_date) {
+      query = query.gte('created_at', filters.start_date)
+    }
+    if (filters.end_date) {
+      query = query.lte('created_at', filters.end_date)
+    }
+    if (filters.created_by) {
+      query = query.eq('created_by', filters.created_by)
+    }
+
+    const { data, error } = await query
+
+    if (error) throw error
+
+    const stats = {
+      total_operations: data?.length || 0,
+      total_employees_affected: 0,
+      total_cost_impact: 0,
+      operations_by_type: {} as Record<string, number>,
+      operations_by_status: {} as Record<string, number>
+    }
+
+    data?.forEach(op => {
+      stats.total_employees_affected += op.total_employees_affected
+      stats.total_cost_impact += op.total_cost_impact
+
+      stats.operations_by_type[op.operation_type] = (stats.operations_by_type[op.operation_type] || 0) + 1
+      stats.operations_by_status[op.operation_status] = (stats.operations_by_status[op.operation_status] || 0) + 1
+    })
+
+    return stats
+  }
+
   // Export salary history for compliance
   async exportSalaryHistoryForCompliance(
     periodStart: string,
@@ -551,10 +966,10 @@ export class SalaryHistoryService {
   }> {
     // Get salary history data
     let query = this.supabase
-      .from('employee_salary_timeline')
+      .from('employee_change_log')
       .select('*')
-      .gte('effective_date', periodStart)
-      .lte('effective_date', periodEnd)
+      .gte('change_date', periodStart)
+      .lte('change_date', periodEnd)
       .order('employee_id', { ascending: true })
       .order('change_date', { ascending: false })
 

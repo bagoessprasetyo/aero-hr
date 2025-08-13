@@ -14,7 +14,10 @@ export default async function DatabaseTest() {
     const tableTests = [
       { name: 'employees', test: async () => supabase.from('employees').select('*', { count: 'exact', head: true }) },
       { name: 'salary_components', test: async () => supabase.from('salary_components').select('*', { count: 'exact', head: true }) },
-      { name: 'app_configuration', test: async () => supabase.from('app_configuration').select('*', { count: 'exact', head: true }) }
+      { name: 'app_configuration', test: async () => supabase.from('app_configuration').select('*', { count: 'exact', head: true }) },
+      { name: 'user_roles', test: async () => supabase.from('user_roles').select('*', { count: 'exact', head: true }) },
+      { name: 'user_permissions', test: async () => supabase.from('user_permissions').select('*', { count: 'exact', head: true }) },
+      { name: 'user_profiles', test: async () => supabase.from('user_profiles').select('*', { count: 'exact', head: true }) }
     ]
 
     let successCount = 0

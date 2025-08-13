@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { ProtectedRoute } from "@/components/rbac/protected-route"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -16,6 +17,14 @@ import { useRouter } from "next/navigation"
 const payrollService = new PayrollService()
 
 export default function PayrollPage() {
+  return (
+    <ProtectedRoute permission="payroll.read">
+      <PayrollPageContent />
+    </ProtectedRoute>
+  )
+}
+
+function PayrollPageContent() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [stats, setStats] = useState({

@@ -30,7 +30,12 @@ import {
   Eye,
   Download,
   Play,
-  XCircle
+  XCircle,
+  History,
+  Settings,
+  Bookmark,
+  RotateCcw,
+  BarChart3
 } from "lucide-react"
 import { EmployeeService } from "@/lib/services/employees"
 import { SalaryHistoryService, type BulkSalaryAdjustment } from "@/lib/services/salary-history"
@@ -43,6 +48,10 @@ import type {
 } from "@/lib/types/database"
 import { formatCurrency } from "@/lib/utils/validation"
 import { cn } from "@/lib/utils"
+import { BulkOperationHistory } from "./bulk-operation-history"
+import { BulkOperationTemplates } from "./bulk-operation-templates"
+import { BulkOperationRollback } from "./bulk-operation-rollback"
+import { BulkOperationAnalytics } from "./bulk-operation-analytics"
 
 interface BulkOperationsProps {
   className?: string
@@ -74,6 +83,10 @@ export function BulkOperations({ className }: BulkOperationsProps) {
   const [showPreview, setShowPreview] = useState(false)
   const [departments, setDepartments] = useState<string[]>([])
   const [positions, setPositions] = useState<string[]>([])
+  const [executing, setExecuting] = useState(false)
+  const [operationProgress, setOperationProgress] = useState({ completed: 0, total: 0, current: '' })
+  const [operationId, setOperationId] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'operations' | 'history' | 'templates' | 'rollback' | 'analytics'>('operations')
 
   useEffect(() => {
     loadEmployees()
@@ -188,22 +201,79 @@ export function BulkOperations({ className }: BulkOperationsProps) {
   }
 
   const executeBulkOperation = async () => {
-    // In a real implementation, this would call the service to execute the bulk operation
-    console.log('Executing bulk operation:', {
-      selectedEmployees: Array.from(selectedEmployees),
-      adjustment: bulkAdjustment,
-      preview: previewData
-    })
-    // Reset form
-    setShowPreview(false)
-    setSelectedEmployees(new Set())
-    setBulkAdjustment({
-      adjustmentType: 'percentage',
-      adjustmentValue: 0,
-      operationName: '',
-      effectiveDate: new Date().toISOString().split('T')[0],
-      changeReason: ''
-    })
+    if (!previewData.length) return
+    
+    try {
+      setExecuting(true)
+      setOperationProgress({ completed: 0, total: previewData.length, current: 'Creating bulk operation...' })
+
+      // Create the bulk operation record
+      const { success, operation_id, error } = await salaryHistoryService.createBulkSalaryOperation({
+        operation_type: 'mass_increase', // This could be dynamic based on adjustment type
+        operation_name: bulkAdjustment.operationName,
+        operation_description: bulkAdjustment.changeReason,
+        adjustment_type: bulkAdjustment.adjustmentType,
+        adjustment_value: bulkAdjustment.adjustmentValue,
+        effective_date: bulkAdjustment.effectiveDate,
+        employee_ids: Array.from(selectedEmployees),
+        preview_data: previewData.map(item => ({
+          employee_id: item.employee.id,
+          previous_gross_salary: item.currentSalary,
+          new_gross_salary: item.newSalary,
+          salary_change_amount: item.changeAmount,
+          component_changes: {} // This could include specific component changes
+        })),
+        total_cost_impact: getTotalImpact(),
+        created_by: 'current_user' // In real implementation, get from auth context
+      })
+
+      if (!success || !operation_id) {
+        throw new Error(error || 'Failed to create bulk operation')
+      }
+
+      setOperationId(operation_id)
+      setOperationProgress({ completed: 0, total: previewData.length, current: 'Executing salary changes...' })
+
+      // Execute the bulk operation
+      const { success: execSuccess, results, error: execError } = await salaryHistoryService.executeBulkSalaryOperation(
+        operation_id,
+        'current_user', // In real implementation, get from auth context
+        (progress) => {
+          setOperationProgress({
+            completed: progress.completed,
+            total: progress.total,
+            current: progress.current || 'Processing...'
+          })
+        }
+      )
+
+      if (!execSuccess) {
+        throw new Error(execError || 'Failed to execute bulk operation')
+      }
+
+      // Show success message
+      console.log('Bulk operation completed successfully:', results)
+      alert(`Bulk operation completed! ${results.successful} successful, ${results.failed} failed.`)
+
+      // Reset form
+      setShowPreview(false)
+      setSelectedEmployees(new Set())
+      setBulkAdjustment({
+        adjustmentType: 'percentage',
+        adjustmentValue: 0,
+        operationName: '',
+        effectiveDate: new Date().toISOString().split('T')[0],
+        changeReason: ''
+      })
+      setOperationId(null)
+
+    } catch (error: any) {
+      console.error('Error executing bulk operation:', error)
+      alert(`Error executing bulk operation: ${error.message}`)
+    } finally {
+      setExecuting(false)
+      setOperationProgress({ completed: 0, total: 0, current: '' })
+    }
   }
 
   const getTotalImpact = () => {
@@ -216,24 +286,120 @@ export function BulkOperations({ className }: BulkOperationsProps) {
     return totalPercentage / previewData.length
   }
 
+  const handleTemplateApply = (template: any) => {
+    // Apply template values to the form
+    setBulkAdjustment(prev => ({
+      ...prev,
+      adjustmentType: template.adjustment_type,
+      adjustmentValue: template.adjustment_value || 0,
+      operationName: template.template_name,
+      changeReason: template.default_reason || ''
+    }))
+
+    // If template has department filter, apply it
+    if (template.department_filter) {
+      filterEmployeesByDepartment(template.department_filter)
+    }
+
+    // Switch to operations tab
+    setActiveTab('operations')
+  }
+
   return (
     <div className={cn("space-y-6", className)}>
       {/* Header */}
       <ProfessionalCard module="payroll">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Users className="h-5 w-5" />
-            <span>Bulk Salary Operations</span>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Users className="h-5 w-5" />
+              <span>Bulk Salary Operations</span>
+            </div>
+            {/* Tab Navigation */}
+            <div className="flex items-center space-x-1 bg-gray-100 p-1 rounded-lg">
+              <Button
+                variant={activeTab === 'operations' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveTab('operations')}
+                className={cn(
+                  "text-sm",
+                  activeTab === 'operations' && "bg-white shadow-sm"
+                )}
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Operations
+              </Button>
+              <Button
+                variant={activeTab === 'history' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveTab('history')}
+                className={cn(
+                  "text-sm",
+                  activeTab === 'history' && "bg-white shadow-sm"
+                )}
+              >
+                <History className="mr-2 h-4 w-4" />
+                History
+              </Button>
+              <Button
+                variant={activeTab === 'templates' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveTab('templates')}
+                className={cn(
+                  "text-sm",
+                  activeTab === 'templates' && "bg-white shadow-sm"
+                )}
+              >
+                <Bookmark className="mr-2 h-4 w-4" />
+                Templates
+              </Button>
+              <Button
+                variant={activeTab === 'rollback' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveTab('rollback')}
+                className={cn(
+                  "text-sm",
+                  activeTab === 'rollback' && "bg-white shadow-sm"
+                )}
+              >
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Rollback
+              </Button>
+              <Button
+                variant={activeTab === 'analytics' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveTab('analytics')}
+                className={cn(
+                  "text-sm",
+                  activeTab === 'analytics' && "bg-white shadow-sm"
+                )}
+              >
+                <BarChart3 className="mr-2 h-4 w-4" />
+                Analytics
+              </Button>
+            </div>
           </CardTitle>
           <CardDescription>
-            Perform mass salary adjustments across multiple employees with preview and approval workflow
+            {activeTab === 'operations' 
+              ? 'Perform mass salary adjustments across multiple employees with preview and approval workflow'
+              : activeTab === 'history'
+              ? 'View and manage past bulk salary operations with detailed analytics'
+              : activeTab === 'templates'
+              ? 'Create and manage reusable operation templates for common salary adjustments'
+              : activeTab === 'rollback'
+              ? 'Reverse completed bulk operations and restore previous salary states'
+              : 'Comprehensive analytics and insights for bulk salary operations'
+            }
           </CardDescription>
         </CardHeader>
       </ProfessionalCard>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Employee Selection */}
-        <div className="lg:col-span-2 space-y-6">
+      {/* Tab Content */}
+      {activeTab === 'operations' ? (
+        <>
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Employee Selection */}
+            <div className="lg:col-span-2 space-y-6">
           <ProfessionalCard>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -440,7 +606,56 @@ export function BulkOperations({ className }: BulkOperationsProps) {
         </div>
       </div>
 
-      {/* Preview Section */}
+          {/* Progress Section */}
+      {executing && (
+        <ProfessionalCard>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Clock className="h-5 w-5 animate-spin" />
+              <span>Operation in Progress</span>
+            </CardTitle>
+            <CardDescription>
+              Executing bulk salary operation for {operationProgress.total} employees
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Progress Bar */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Progress</span>
+                  <span>{operationProgress.completed} / {operationProgress.total}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ 
+                      width: operationProgress.total > 0 
+                        ? `${(operationProgress.completed / operationProgress.total) * 100}%` 
+                        : '0%' 
+                    }}
+                  ></div>
+                </div>
+              </div>
+              
+              {/* Current Action */}
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <span className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
+                <span>{operationProgress.current}</span>
+              </div>
+
+              {/* Operation ID */}
+              {operationId && (
+                <div className="text-xs text-gray-500">
+                  Operation ID: {operationId}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </ProfessionalCard>
+      )}
+
+          {/* Preview Section */}
       {showPreview && previewData.length > 0 && (
         <ProfessionalCard>
           <CardHeader>
@@ -458,9 +673,10 @@ export function BulkOperations({ className }: BulkOperationsProps) {
                   variant="primary" 
                   size="sm"
                   onClick={executeBulkOperation}
+                  disabled={executing}
                 >
                   <Play className="mr-2 h-4 w-4" />
-                  Execute Operation
+                  {executing ? 'Executing...' : 'Execute Operation'}
                 </ActionButton>
               </div>
             </CardTitle>
@@ -549,6 +765,18 @@ export function BulkOperations({ className }: BulkOperationsProps) {
             </div>
           </CardContent>
         </ProfessionalCard>
+      )}
+        </>
+      ) : activeTab === 'history' ? (
+        <BulkOperationHistory />
+      ) : activeTab === 'templates' ? (
+        <BulkOperationTemplates 
+          onTemplateApply={handleTemplateApply}
+        />
+      ) : activeTab === 'rollback' ? (
+        <BulkOperationRollback />
+      ) : (
+        <BulkOperationAnalytics />
       )}
     </div>
   )
