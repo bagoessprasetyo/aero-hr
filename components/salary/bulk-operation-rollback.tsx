@@ -89,7 +89,7 @@ export function BulkOperationRollback({ className }: BulkOperationRollbackProps)
       // Filter operations that are eligible for rollback (completed in last 30 days)
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
       const eligible = operations.filter(op => 
-        new Date(op.completed_at || op.created_at) > thirtyDaysAgo
+        new Date(op.executed_at || op.created_at) > thirtyDaysAgo
       )
       
       setEligibleOperations(eligible)
@@ -118,7 +118,7 @@ export function BulkOperationRollback({ className }: BulkOperationRollbackProps)
 
       // Assess risk level
       const daysSinceCompletion = Math.floor(
-        (Date.now() - new Date(operation.completed_at || operation.created_at).getTime()) / 
+        (Date.now() - new Date(operation.executed_at || operation.created_at).getTime()) / 
         (1000 * 60 * 60 * 24)
       )
       
@@ -424,7 +424,7 @@ export function BulkOperationRollback({ className }: BulkOperationRollbackProps)
                           <span className="font-medium">{formatCurrency(operation.total_cost_impact)}</span> impact
                         </div>
                         <div>
-                          {new Date(operation.completed_at || operation.created_at).toLocaleDateString('id-ID')}
+                          {new Date(operation.executed_at || operation.created_at).toLocaleDateString('id-ID')}
                         </div>
                       </div>
                     </div>
@@ -485,7 +485,7 @@ export function BulkOperationRollback({ className }: BulkOperationRollbackProps)
                 )}
 
                 <ActionButton
-                  variant="destructive"
+                  // variant="destructive"
                   onClick={executeRollback}
                   disabled={!rollbackReason.trim() || executing || (partialRollback && selectedItems.size === 0)}
                   className="w-full"
@@ -546,7 +546,7 @@ export function BulkOperationRollback({ className }: BulkOperationRollbackProps)
                   <div className="text-sm text-gray-600 space-y-1">
                     <div>Name: {rollbackPlan.operation.operation_name}</div>
                     <div>Type: {rollbackPlan.operation.operation_type.replace('_', ' ')}</div>
-                    <div>Completed: {new Date(rollbackPlan.operation.completed_at || rollbackPlan.operation.created_at).toLocaleDateString('id-ID')}</div>
+                    <div>Completed: {new Date(rollbackPlan.operation.executed_at || rollbackPlan.operation.created_at).toLocaleDateString('id-ID')}</div>
                   </div>
                 </div>
               </CardContent>

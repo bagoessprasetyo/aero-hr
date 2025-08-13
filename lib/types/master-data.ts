@@ -1,5 +1,7 @@
 // Master Data Types for Aero HR System
 
+import { Employee } from './database'
+
 export interface Department {
   id: string
   department_code: string

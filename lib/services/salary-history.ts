@@ -827,6 +827,7 @@ export class SalaryHistoryService {
     start_date?: string
     end_date?: string
     created_by?: string
+    completed_at?: string
     status?: string
     limit?: number
   } = {}): Promise<BulkSalaryOperation[]> {
@@ -864,7 +865,7 @@ export class SalaryHistoryService {
   }
 
   // Get bulk operation details by ID
-  async getBulkOperationById(operationId: string): Promise<BulkSalaryOperation | null> {
+  async getBulkOperationById(operationId: string): Promise<(BulkSalaryOperation & { bulk_salary_operation_items: BulkSalaryOperationItem[] }) | null> {
     const { data, error } = await this.supabase
       .from('bulk_salary_operations')
       .select(`

@@ -86,7 +86,7 @@ export function RBACProvider({ children }: RBACProviderProps) {
         console.error('RBAC: Error loading user data:', userError)
         
         // Check if error is because user profile doesn't exist
-        if (userError.message?.includes('User profile not found')) {
+        if (userError instanceof Error && userError.message?.includes('User profile not found')) {
           console.log('RBAC: Creating temporary user profile for development')
           // Create a minimal user object for development
           const tempUser = {

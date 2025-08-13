@@ -396,14 +396,14 @@ export function BulkOperationHistory({ className }: BulkOperationHistoryProps) {
                     <div className="flex justify-between text-sm">
                       <span>Effective Date:</span>
                       <span className="font-medium">
-                        {new Date(selectedOperation.effective_date).toLocaleDateString('id-ID')}
+                        {selectedOperation.effective_date ? new Date(selectedOperation.effective_date).toLocaleDateString('id-ID') : '-'}
                       </span>
                     </div>
                     {selectedOperation.successful_items !== undefined && (
                       <div className="flex justify-between text-sm">
                         <span>Success Rate:</span>
                         <span className="font-medium text-green-600">
-                          {selectedOperation.successful_items} / {selectedOperation.total_employees_affected}
+                          {String(selectedOperation.successful_items)} / {String(selectedOperation.total_employees_affected)}
                         </span>
                       </div>
                     )}

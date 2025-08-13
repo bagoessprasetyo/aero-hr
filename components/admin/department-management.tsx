@@ -36,7 +36,7 @@ import {
 
 const masterDataService = new MasterDataService()
 
-interface DepartmentWithRelations extends Omit<Department, 'positions'> {
+interface DepartmentWithRelations extends Omit<Department, 'positions' | 'department_head'> {
   parent_department?: Department
   child_departments?: Department[]
   department_head?: { id: string; full_name: string }

@@ -238,6 +238,8 @@ export interface BulkSalaryOperation {
   salary_range_filter?: Record<string, any>
   adjustment_type: AdjustmentType
   adjustment_value?: number
+  effective_date?: string | number | Date
+  successful_items?: string | number | Date
   total_cost_impact: number
   total_employees_affected: number
   operation_status: BulkOperationStatus
