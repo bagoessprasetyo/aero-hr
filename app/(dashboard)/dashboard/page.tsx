@@ -109,8 +109,13 @@ export default function DashboardPage() {
             totalPayroll += employeeSalary
             
             // Track by department
-            const deptData = departmentMap.get(employee.department) || { count: 0, totalSalary: 0 }
-            departmentMap.set(employee.department, {
+            const deptName = typeof employee.department === 'object' && employee.department?.department_name 
+              ? employee.department.department_name 
+              : typeof employee.department === 'string' 
+                ? employee.department 
+                : 'No Department'
+            const deptData = departmentMap.get(deptName) || { count: 0, totalSalary: 0 }
+            departmentMap.set(deptName, {
               count: deptData.count + 1,
               totalSalary: deptData.totalSalary + employeeSalary
             })
@@ -191,12 +196,12 @@ export default function DashboardPage() {
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map(i => (
-            <LoadingSkeleton key={i} lines={3} className="h-32" />
+            <LoadingSkeleton key={i} className="h-32" />
           ))}
         </div>
         <div className="grid gap-6 lg:grid-cols-2">
-          <LoadingSkeleton lines={6} className="h-80" />
-          <LoadingSkeleton lines={6} className="h-80" />
+          <LoadingSkeleton className="h-80" />
+          <LoadingSkeleton className="h-80" />
         </div>
       </div>
     )
@@ -230,36 +235,43 @@ export default function DashboardPage() {
           title="Total Employees"
           value={stats.totalEmployees.toString()}
           subtitle={`${stats.activeEmployees} active`}
-          trend="up"
-          icon={<Users className="h-4 w-4" />}
-          module="employee"
+          trend={{
+            value: 5.2,
+            isPositive: true,
+            label: "this month"
+          }}
+          icon={Users}
         />
         
         <StatsCard
           title="Monthly Payroll"
           value={formatCurrency(stats.totalPayroll)}
           subtitle={`Avg: ${formatCurrency(stats.avgSalary)}`}
-          trend="up"
-          icon={<DollarSign className="h-4 w-4" />}
-          module="payroll"
+          trend={{
+            value: 3.1,
+            isPositive: true,
+            label: "from last month"
+          }}
+          icon={DollarSign}
         />
         
         <StatsCard
           title="Recent Changes"
           value={stats.recentChanges.toString()}
           subtitle="Last 30 days"
-          trend="neutral"
-          icon={<TrendingUp className="h-4 w-4" />}
-          module="salary"
+          icon={TrendingUp}
         />
         
         <StatsCard
           title="Pending Reviews"
           value={stats.pendingReviews.toString()}
           subtitle="Require attention"
-          trend="down"
-          icon={<Clock className="h-4 w-4" />}
-          module="tax"
+          trend={{
+            value: 2.3,
+            isPositive: false,
+            label: "from last week"
+          }}
+          icon={Clock}
         />
       </div>
 

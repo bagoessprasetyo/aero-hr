@@ -194,7 +194,7 @@ export function TaxConfig({ className }: TaxConfigProps) {
   if (!config || !editedConfig) {
     return (
       <EmptyState
-        icon={<Settings className="h-8 w-8" />}
+        icon={Settings}
         title="Configuration not found"
         description="Unable to load tax configuration"
       />
@@ -567,7 +567,7 @@ export function TaxConfig({ className }: TaxConfigProps) {
             <CardContent>
               {history.length === 0 ? (
                 <EmptyState
-                  icon={<Calendar className="h-8 w-8" />}
+                  icon={Calendar}
                   title="No history available"
                   description="Configuration changes will appear here"
                 />

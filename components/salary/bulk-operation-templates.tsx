@@ -395,12 +395,12 @@ export function BulkOperationTemplates({ className, onTemplateApply }: BulkOpera
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map(i => (
-                <LoadingSkeleton key={i} lines={3} className="h-24" />
+                <LoadingSkeleton key={i} className="h-24" />
               ))}
             </div>
           ) : templates.length === 0 ? (
             <EmptyState
-              icon={<Bookmark className="h-8 w-8" />}
+              icon={Bookmark}
               title="No templates found"
               description="Create your first operation template to get started"
             />

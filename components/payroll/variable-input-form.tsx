@@ -258,7 +258,7 @@ export function VariableInputForm({ payrollId, onVariablesUpdated }: VariableInp
                       <TableCell>
                         <div>
                           <div className="font-medium">{employee.full_name}</div>
-                          <div className="text-sm text-muted-foreground">{employee.department}</div>
+                          <div className="text-sm text-muted-foreground">{employee.department_id}</div>
                         </div>
                       </TableCell>
                       <TableCell>

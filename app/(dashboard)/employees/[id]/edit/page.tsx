@@ -19,6 +19,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
           </CardContent>
         </Card>
       }>
+         
         <EditEmployeeForm employeeId={params.id} />
       </Suspense>
     </div>

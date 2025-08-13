@@ -1,8 +1,10 @@
 import { createClient } from '@/lib/supabase/client'
 import type { Employee, SalaryComponent, EmployeeWithSalaryComponents } from '@/lib/types/database'
+import { MasterDataService } from '@/lib/services/master-data'
 
 export class EmployeeService {
   private supabase = createClient()
+  private masterDataService = new MasterDataService()
 
   // Get all employees with optional filtering
   async getEmployees(filters: {
@@ -14,7 +16,12 @@ export class EmployeeService {
   } = {}) {
     let query = this.supabase
       .from('employees')
-      .select('*')
+      .select(`
+        *,
+        department:departments!department_id(id, department_name, department_code),
+        position:positions!position_id(id, position_title, position_code),
+        bank:banks!bank_id(id, bank_name, bank_code)
+      `)
       .order('created_at', { ascending: false })
 
     // Apply search filter
@@ -22,9 +29,9 @@ export class EmployeeService {
       query = query.or(`full_name.ilike.%${filters.search}%,employee_id.ilike.%${filters.search}%,nik.ilike.%${filters.search}%,npwp.ilike.%${filters.search}%`)
     }
 
-    // Apply department filter
+    // Apply department filter - now using department_id
     if (filters.department) {
-      query = query.eq('department', filters.department)
+      query = query.eq('department_id', filters.department)
     }
 
     // Apply status filter
@@ -50,7 +57,12 @@ export class EmployeeService {
   async getEmployeeById(id: string): Promise<EmployeeWithSalaryComponents | null> {
     const { data: employee, error: employeeError } = await this.supabase
       .from('employees')
-      .select('*')
+      .select(`
+        *,
+        department:departments!department_id(id, department_name, department_code),
+        position:positions!position_id(id, position_title, position_code),
+        bank:banks!bank_id(id, bank_name, bank_code)
+      `)
       .eq('id', id)
       .single()
 
@@ -74,9 +86,12 @@ export class EmployeeService {
 
   // Create new employee
   async createEmployee(employeeData: Omit<Employee, 'id' | 'created_at' | 'updated_at'>) {
+    // Filter out deprecated fields that shouldn't be sent to database
+    const { bank_name, department, position, bank, ...cleanEmployeeData } = employeeData as any
+    
     const { data, error } = await this.supabase
       .from('employees')
-      .insert([employeeData])
+      .insert([cleanEmployeeData])
       .select()
       .single()
 
@@ -86,10 +101,13 @@ export class EmployeeService {
 
   // Update employee
   async updateEmployee(id: string, employeeData: Partial<Employee>) {
+    // Filter out deprecated fields that shouldn't be sent to database
+    const { bank_name, department, position, bank, ...cleanEmployeeData } = employeeData as any
+    
     const { data, error } = await this.supabase
       .from('employees')
       .update({
-        ...employeeData,
+        ...cleanEmployeeData,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -167,18 +185,24 @@ export class EmployeeService {
     return data
   }
 
-  // Get unique departments for filtering
+  // Get active departments for filtering
   async getDepartments() {
-    const { data, error } = await this.supabase
-      .from('employees')
-      .select('department')
-      .not('department', 'is', null)
+    const departments = await this.masterDataService.getActiveDepartments()
+    return departments.map(dept => ({
+      id: dept.id,
+      name: dept.department_name,
+      code: dept.department_code
+    }))
+  }
 
-    if (error) throw error
-    
-    const departments = data?.map(item => item.department) || []
-    const uniqueDepartments = Array.from(new Set(departments))
-    return uniqueDepartments.sort()
+  // Get active positions for filtering
+  async getPositions(departmentId?: string) {
+    const positions = await this.masterDataService.getActivePositions(departmentId)
+    return positions.map(pos => ({
+      id: pos.id,
+      title: pos.position_title,
+      code: pos.position_code
+    }))
   }
 
   // Get employee count by status

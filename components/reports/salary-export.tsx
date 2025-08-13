@@ -112,14 +112,14 @@ export function SalaryExport({ className }: SalaryExportProps) {
       newSelection.add(department)
       // Auto-select employees from this department
       const deptEmployees = employees
-        .filter(emp => emp.department === department)
+        .filter(emp => emp.department_id === department)
         .map(emp => emp.id)
       setSelectedEmployees(prev => new Set([...prev, ...deptEmployees]))
     } else {
       newSelection.delete(department)
       // Auto-deselect employees from this department
       const deptEmployees = employees
-        .filter(emp => emp.department === department)
+        .filter(emp => emp.department_id === department)
         .map(emp => emp.id)
       setSelectedEmployees(prev => {
         const newEmpSelection = new Set(prev)
@@ -133,7 +133,7 @@ export function SalaryExport({ className }: SalaryExportProps) {
   const generatePreview = async () => {
     const filteredEmployees = employees.filter(emp => {
       if (!exportFilters.includeInactive && emp.employee_status !== 'active') return false
-      if (selectedDepartments.size > 0 && !selectedDepartments.has(emp.department)) return false
+      if (selectedDepartments.size > 0 && !selectedDepartments.has(emp.department_id)) return false
       if (selectedEmployees.size > 0 && !selectedEmployees.has(emp.id)) return false
       return true
     })
@@ -584,7 +584,7 @@ export function SalaryExport({ className }: SalaryExportProps) {
             <CardContent>
               {recentExports.length === 0 ? (
                 <EmptyState
-                  icon={<FileSpreadsheet className="h-8 w-8" />}
+                  icon={FileSpreadsheet}
                   title="No recent exports"
                   description="Export history will appear here"
                 />

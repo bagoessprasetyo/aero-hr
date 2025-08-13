@@ -12,8 +12,7 @@ import {
   StatusBadge, 
   ActionButton, 
   EmptyState, 
-  LoadingSkeleton,
-  designUtils 
+  LoadingSkeleton
 } from "@/components/ui/professional"
 import { 
   History, 
@@ -347,12 +346,12 @@ export function SalaryHistoryTimelineComponent({ employee, className }: SalaryHi
           {loading ? (
             <div className="space-y-4">
               {[1, 2, 3, 4, 5].map((i) => (
-                <LoadingSkeleton key={i} lines={3} className="p-4" />
+                <LoadingSkeleton key={i}  className="p-4" />
               ))}
             </div>
           ) : timeline.length === 0 ? (
             <EmptyState
-              icon={<History className="h-12 w-12" />}
+              icon={History}
               title="No salary history found"
               description="No salary changes recorded for the selected period"
             />
@@ -363,8 +362,7 @@ export function SalaryHistoryTimelineComponent({ employee, className }: SalaryHi
                   key={`${item.employee_id}-${item.change_date}-${index}`}
                   className={cn(
                     "relative border-l-4 p-4 rounded-lg",
-                    getActionColor(item.action_type),
-                    designUtils.getHoverTransition()
+                    getActionColor(item.action_type)
                   )}
                 >
                   <div className="flex items-start justify-between">

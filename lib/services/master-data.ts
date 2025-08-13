@@ -131,7 +131,7 @@ export class MasterDataService {
     const { data: employees } = await this.supabase
       .from('employees')
       .select('id')
-      .eq('department', id)
+      .eq('department_id', id)
       .limit(1)
 
     const { data: childDepts } = await this.supabase
@@ -324,7 +324,7 @@ export class MasterDataService {
     const { data: employees } = await this.supabase
       .from('employees')
       .select('id')
-      .eq('position_title', id) // This would need to be updated when employees table uses position_id
+      .eq('position_id', id)
       .limit(1)
 
     if (employees?.length) {

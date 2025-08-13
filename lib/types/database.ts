@@ -37,25 +37,61 @@ export interface Employee {
   address?: string
   phone?: string
   email?: string
+  date_of_birth?: string
+  place_of_birth?: string
+  gender?: string
+  marital_status?: string
   
-  // Employment Information
-  position_title: string
-  department: string
+  // Employment Information (Foreign Keys)
+  department_id: string
+  position_id: string
   join_date: string
+  probation_end_date?: string
+  contract_end_date?: string
   employment_status: EmploymentStatus
   employee_status: EmployeeStatus
   
   // Financial Information
-  bank_name: string
+  bank_id?: string
+  bank_name?: string // Keep for backward compatibility
   bank_account_number: string
+  bank_account_holder?: string
   ptkp_status: PTKPStatus
   
   // BPJS Enrollment
   bpjs_health_enrolled: boolean
+  bpjs_health_number?: string
   bpjs_manpower_enrolled: boolean
+  bpjs_manpower_number?: string
+  insurance_number?: string
+  
+  // Emergency Contact
+  emergency_contact_name?: string
+  emergency_contact_relationship?: string
+  emergency_contact_phone?: string
+  
+  // Additional Information
+  notes?: string
   
   created_at: string
   updated_at: string
+  
+  // Related objects (from joins)
+  department?: {
+    id: string
+    department_name: string
+    department_code: string
+  }
+  position?: {
+    id: string
+    position_title: string
+    position_code: string
+  }
+  bank?: {
+    id: string
+    bank_name: string
+    bank_code: string
+  }
 }
 
 export interface SalaryComponent {

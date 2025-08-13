@@ -100,7 +100,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
   const handleDepartmentChange = (departmentId: string) => {
     setSelectedDepartment(departmentId)
     // Clear position when department changes
-    form.setValue('position_title', '')
+form.setValue('position_id', '')
   }
 
   const onSubmit = async (data: EmployeeFormData) => {
@@ -301,7 +301,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="department"
+                  name="department_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Department *</FormLabel>
@@ -333,7 +333,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
                 
                 <FormField
                   control={form.control}
-                  name="position_title"
+                  name="position_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Position Title *</FormLabel>
@@ -448,7 +448,7 @@ export function AddEmployeeForm({ onSuccess, onCancel }: AddEmployeeFormProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="bank_name"
+                  name="bank_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Bank Name *</FormLabel>

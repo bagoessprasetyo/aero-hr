@@ -105,7 +105,7 @@ export function EditEmployeeForm({ employeeId }: EditEmployeeFormProps) {
   const handleDepartmentChange = (departmentId: string) => {
     setSelectedDepartment(departmentId)
     // Clear position when department changes
-    form.setValue('position_title', '')
+    form.setValue('position_id', '')
   }
 
   const loadEmployeeData = async () => {
@@ -127,12 +127,12 @@ export function EditEmployeeForm({ employeeId }: EditEmployeeFormProps) {
         address: employee.address || "",
         phone: employee.phone || "",
         email: employee.email || "",
-        position_title: employee.position_title,
-        department: employee.department,
+        position_id: employee.position_id || employee.position?.id || "",
+        department_id: employee.department_id || employee.department?.id || "",
         join_date: employee.join_date,
         employment_status: employee.employment_status,
         employee_status: employee.employee_status,
-        bank_name: employee.bank_name,
+        bank_id: employee.bank_id || employee.bank?.id || "",
         bank_account_number: employee.bank_account_number,
         ptkp_status: employee.ptkp_status,
         bpjs_health_enrolled: employee.bpjs_health_enrolled,
@@ -140,9 +140,9 @@ export function EditEmployeeForm({ employeeId }: EditEmployeeFormProps) {
       })
 
       // Set selected department to load positions
-      const department = departments.find(d => d.department_name === employee.department)
-      if (department) {
-        setSelectedDepartment(department.id)
+      const departmentId = employee.department_id || employee.department?.id
+      if (departmentId) {
+        setSelectedDepartment(departmentId)
       }
     } catch (error: any) {
       setSubmitError(error.message || "Failed to load employee data")
@@ -403,7 +403,7 @@ export function EditEmployeeForm({ employeeId }: EditEmployeeFormProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="department"
+                    name="department_id"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Department *</FormLabel>
@@ -422,7 +422,7 @@ export function EditEmployeeForm({ employeeId }: EditEmployeeFormProps) {
                           </FormControl>
                           <SelectContent>
                             {departments.map((dept) => (
-                              <SelectItem key={dept.id} value={dept.department_name}>
+                              <SelectItem key={dept.id} value={dept.id}>
                                 {dept.department_name} ({dept.department_code})
                               </SelectItem>
                             ))}
@@ -435,10 +435,10 @@ export function EditEmployeeForm({ employeeId }: EditEmployeeFormProps) {
                   
                   <FormField
                     control={form.control}
-                    name="position_title"
+                    name="position_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Position Title *</FormLabel>
+                        <FormLabel>Position *</FormLabel>
                         <Select 
                           onValueChange={field.onChange} 
                           value={field.value}
@@ -457,7 +457,7 @@ export function EditEmployeeForm({ employeeId }: EditEmployeeFormProps) {
                           </FormControl>
                           <SelectContent>
                             {positions.map((position) => (
-                              <SelectItem key={position.id} value={position.position_title}>
+                              <SelectItem key={position.id} value={position.id}>
                                 {position.position_title} (Level {position.position_level})
                               </SelectItem>
                             ))}
@@ -550,7 +550,7 @@ export function EditEmployeeForm({ employeeId }: EditEmployeeFormProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="bank_name"
+                    name="bank_id"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Bank Name *</FormLabel>
@@ -566,7 +566,7 @@ export function EditEmployeeForm({ employeeId }: EditEmployeeFormProps) {
                           </FormControl>
                           <SelectContent>
                             {banks.map((bank) => (
-                              <SelectItem key={bank.id} value={bank.bank_name}>
+                              <SelectItem key={bank.id} value={bank.id}>
                                 {bank.bank_name} ({bank.bank_code})
                               </SelectItem>
                             ))}

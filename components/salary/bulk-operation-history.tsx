@@ -286,12 +286,12 @@ export function BulkOperationHistory({ className }: BulkOperationHistoryProps) {
               {loading ? (
                 <div className="space-y-3">
                   {[1, 2, 3, 4, 5].map(i => (
-                    <LoadingSkeleton key={i} lines={3} className="h-20" />
+                    <LoadingSkeleton key={i} className="h-20" />
                   ))}
                 </div>
               ) : operations.length === 0 ? (
                 <EmptyState
-                  icon={<History className="h-8 w-8" />}
+                  icon={History}
                   title="No operations found"
                   description="No bulk operations match the selected filters"
                 />
@@ -419,7 +419,7 @@ export function BulkOperationHistory({ className }: BulkOperationHistoryProps) {
                 </div>
               ) : (
                 <EmptyState
-                  icon={<Eye className="h-8 w-8" />}
+                  icon={Eye}
                   title="No operation selected"
                   description="Select an operation from the list to view details"
                 />

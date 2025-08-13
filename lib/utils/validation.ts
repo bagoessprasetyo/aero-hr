@@ -72,14 +72,12 @@ export const employeeFormSchema = z.object({
     .or(z.literal('')),
 
   // Employment Information
-  position_title: z
+  position_id: z
     .string()
-    .min(2, 'Position title must be at least 2 characters')
-    .max(100, 'Position title must be at most 100 characters'),
-  department: z
+    .min(1, 'Position is required'),
+  department_id: z
     .string()
-    .min(2, 'Department must be at least 2 characters')
-    .max(50, 'Department must be at most 50 characters'),
+    .min(1, 'Department is required'),
   join_date: z
     .string()
     .refine((value) => {
@@ -90,10 +88,9 @@ export const employeeFormSchema = z.object({
   employee_status: z.enum(['active', 'resigned', 'terminated']),
 
   // Financial Information
-  bank_name: z
+  bank_id: z
     .string()
-    .min(2, 'Bank name must be at least 2 characters')
-    .max(50, 'Bank name must be at most 50 characters'),
+    .min(1, 'Bank is required'),
   bank_account_number: bankAccountSchema,
   ptkp_status: z.enum(['TK/0', 'TK/1', 'TK/2', 'TK/3', 'K/0', 'K/1', 'K/2', 'K/3']),
 

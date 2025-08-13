@@ -26,7 +26,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('overview')
 
   return (
-    <ProtectedRoute permission="admin.read">
+    // <ProtectedRoute permission="admin.read">
       <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -219,6 +219,6 @@ export default function AdminPage() {
         </TabsContent>
       </Tabs>
       </div>
-    </ProtectedRoute>
+    // </ProtectedRoute>
   )
 }

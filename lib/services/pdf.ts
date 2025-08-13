@@ -59,7 +59,7 @@ INFORMASI KARYAWAN:
 -------------------------------------------------------------------------------
 NIK                 : ${employee.employee_id}
 Nama                : ${employee.full_name}
-Jabatan             : ${employee.position_title}
+Jabatan             : ${employee.position?.position_title}
 Departemen          : ${employee.department}
 NPWP                : ${employee.npwp || '-'}
 Status PTKP         : ${employee.ptkp_status}

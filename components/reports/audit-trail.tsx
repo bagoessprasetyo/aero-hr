@@ -382,7 +382,7 @@ export function AuditTrail({ className }: AuditTrailProps) {
             <CardContent>
               {auditEntries.length === 0 ? (
                 <EmptyState
-                  icon={<Archive className="h-8 w-8" />}
+                  icon={Archive}
                   title="No audit entries found"
                   description="No calculations match the selected filters"
                 />
@@ -597,7 +597,7 @@ export function AuditTrail({ className }: AuditTrailProps) {
             </div>
           ) : (
             <EmptyState
-              icon={<Eye className="h-8 w-8" />}
+              icon={Eye}
               title="No entry selected"
               description="Select an audit entry from the trail tab to view details"
             />

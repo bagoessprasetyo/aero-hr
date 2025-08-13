@@ -327,12 +327,12 @@ export function BulkOperationAnalytics({ className }: BulkOperationAnalyticsProp
       {loading ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map(i => (
-            <LoadingSkeleton key={i} lines={3} className="h-32" />
+            <LoadingSkeleton key={i} className="h-32" />
           ))}
         </div>
       ) : !analyticsData ? (
         <EmptyState
-          icon={<BarChart3 className="h-8 w-8" />}
+          icon={BarChart3}
           title="No analytics data"
           description="Unable to load analytics data"
         />

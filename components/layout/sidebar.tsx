@@ -381,13 +381,14 @@ export function Sidebar() {
           <SidebarContent className={cn(!isExpanded && "px-2")}>
             <SidebarNav>
               {navigationItems.map((group) => {
-                // Filter items based on permissions
+                // Temporarily disable permission filtering - show all menu items
                 const visibleItems = group.items.filter((item) => {
-                  if (!item.permission) return true; // Always show items without permission requirements
+                  return true; // Show all items temporarily
                   
-                  // Parse permission format "module.action"
-                  const [module, action] = item.permission.split('.')
-                  return canAccess(module, action)
+                  // TODO: Re-enable permission filtering later
+                  // if (!item.permission) return true;
+                  // const [module, action] = item.permission.split('.')
+                  // return canAccess(module, action)
                 });
 
                 // Don't render group if no items are visible

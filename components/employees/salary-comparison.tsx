@@ -223,11 +223,11 @@ export function SalaryComparison({ employee, className }: SalaryComparisonProps)
       {/* Comparison Results */}
       {loading ? (
         <div className="space-y-4">
-          <LoadingSkeleton lines={4} />
+          <LoadingSkeleton />
         </div>
       ) : !comparisonData ? (
         <EmptyState
-          icon={<BarChart3 className="h-12 w-12" />}
+          icon={BarChart3}
           title="No comparison data"
           description="Select dates and click Compare to view salary changes"
         />
@@ -240,27 +240,36 @@ export function SalaryComparison({ employee, className }: SalaryComparisonProps)
                 title="Basic Salary Change"
                 value={formatCurrency(Math.abs(changes.basic.amount))}
                 subtitle={`${changes.basic.percentage >= 0 ? '+' : ''}${changes.basic.percentage.toFixed(1)}%`}
-                trend={changes.basic.amount > 0 ? 'up' : changes.basic.amount < 0 ? 'down' : 'neutral'}
-                icon={<DollarSign className="h-4 w-4" />}
-                module="salary"
+                trend={{
+                  value: Math.abs(changes.basic.percentage),
+                  isPositive: changes.basic.amount >= 0,
+                  label: "change"
+                }}
+                icon={DollarSign}
               />
               
               <StatsCard
                 title="Allowances Change"
                 value={formatCurrency(Math.abs(changes.allowances.amount))}
                 subtitle={`${changes.allowances.percentage >= 0 ? '+' : ''}${changes.allowances.percentage.toFixed(1)}%`}
-                trend={changes.allowances.amount > 0 ? 'up' : changes.allowances.amount < 0 ? 'down' : 'neutral'}
-                icon={<TrendingUp className="h-4 w-4" />}
-                module="employee"
+                trend={{
+                  value: Math.abs(changes.allowances.percentage),
+                  isPositive: changes.allowances.amount >= 0,
+                  label: "change"
+                }}
+                icon={TrendingUp}
               />
               
               <StatsCard
                 title="Total Gross Change"
                 value={formatCurrency(Math.abs(changes.gross.amount))}
                 subtitle={`${changes.gross.percentage >= 0 ? '+' : ''}${changes.gross.percentage.toFixed(1)}%`}
-                trend={changes.gross.amount > 0 ? 'up' : changes.gross.amount < 0 ? 'down' : 'neutral'}
-                icon={<BarChart3 className="h-4 w-4" />}
-                module="payroll"
+                trend={{
+                  value: Math.abs(changes.gross.percentage),
+                  isPositive: changes.gross.amount >= 0,
+                  label: "change"
+                }}
+                icon={BarChart3}
               />
             </div>
           )}

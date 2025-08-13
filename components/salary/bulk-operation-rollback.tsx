@@ -388,12 +388,12 @@ export function BulkOperationRollback({ className }: BulkOperationRollbackProps)
               {loading ? (
                 <div className="space-y-3">
                   {[1, 2, 3].map(i => (
-                    <LoadingSkeleton key={i} lines={2} className="h-16" />
+                    <LoadingSkeleton key={i} className="h-16" />
                   ))}
                 </div>
               ) : eligibleOperations.length === 0 ? (
                 <EmptyState
-                  icon={<RotateCcw className="h-8 w-8" />}
+                  icon={RotateCcw}
                   title="No eligible operations"
                   description="No completed operations available for rollback"
                 />

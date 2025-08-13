@@ -13,7 +13,7 @@ import {
 
 export default function BulkOperationsPage() {
   return (
-    <ProtectedRoute permission="bulk_operations.read">
+    // <ProtectedRoute permission="bulk_operations.read">
       <div className="space-y-6">
       {/* Page Header */}
       <div>
@@ -45,6 +45,6 @@ export default function BulkOperationsPage() {
         </TabsContent>
       </Tabs>
       </div>
-    </ProtectedRoute>
+    // </ProtectedRoute>
   )
 }

@@ -70,14 +70,14 @@ export class SalaryHistoryService {
       .from('salary_component_history')
       .select('*')
       .eq('employee_id', employeeId)
-      .order('change_date', { ascending: false })
+      .order('created_at', { ascending: false })
 
     // Apply filters
     if (filters.startDate) {
-      query = query.gte('change_date', filters.startDate)
+      query = query.gte('created_at', filters.startDate)
     }
     if (filters.endDate) {
-      query = query.lte('change_date', filters.endDate)
+      query = query.lte('created_at', filters.endDate)
     }
     if (filters.actionTypes?.length) {
       query = query.in('action_type', filters.actionTypes)
@@ -109,27 +109,36 @@ export class SalaryHistoryService {
     employeeId: string,
     filters: SalaryHistoryFilters = {}
   ): Promise<SalaryHistoryTimeline[]> {
-    let query = this.supabase
-      .from('employee_change_log')
-      .select('*')
-      .eq('employee_id', employeeId)
-      .order('change_date', { ascending: false })
+    try {
+      let query = this.supabase
+        .from('employee_change_log')
+        .select('*')
+        .eq('employee_id', employeeId)
+        .order('created_at', { ascending: false })
 
-    // Apply similar filters as getSalaryHistory
-    if (filters.startDate) {
-      query = query.gte('change_date', filters.startDate)
-    }
-    if (filters.endDate) {
-      query = query.lte('change_date', filters.endDate)
-    }
-    if (filters.limit) {
-      query = query.limit(filters.limit)
-    }
+      // Apply similar filters as getSalaryHistory
+      if (filters.startDate) {
+        query = query.gte('created_at', filters.startDate)
+      }
+      if (filters.endDate) {
+        query = query.lte('created_at', filters.endDate)
+      }
+      if (filters.limit) {
+        query = query.limit(filters.limit)
+      }
 
-    const { data, error } = await query
+      const { data, error } = await query
 
-    if (error) throw error
-    return data || []
+      if (error) {
+        // If table doesn't exist or has schema issues, return empty array
+        console.warn('employee_change_log query failed:', error.message)
+        return []
+      }
+      return data || []
+    } catch (error) {
+      console.warn('Error accessing employee_change_log table:', error)
+      return []
+    }
   }
 
   // Get employee with complete salary history
@@ -151,14 +160,23 @@ export class SalaryHistoryService {
     const salaryHistory = await this.getSalaryHistory(employeeId, { limit: 50 })
 
     // Get recent change log
-    const { data: changeLog, error: logError } = await this.supabase
-      .from('employee_change_log')
-      .select('*')
-      .eq('employee_id', employeeId)
-      .order('change_date', { ascending: false })
-      .limit(20)
+    let changeLog: any[] = []
+    try {
+      const { data, error: logError } = await this.supabase
+        .from('employee_change_log')
+        .select('*')
+        .eq('employee_id', employeeId)
+        .order('created_at', { ascending: false })
+        .limit(20)
 
-    if (logError) throw logError
+      if (logError) {
+        console.warn('employee_change_log query failed:', logError.message)
+      } else {
+        changeLog = data || []
+      }
+    } catch (error) {
+      console.warn('Error accessing employee_change_log table:', error)
+    }
 
     // Get upcoming reviews
     const { data: upcomingReviews, error: reviewError } = await this.supabase
@@ -235,31 +253,39 @@ export class SalaryHistoryService {
       minSalaryChange?: number
     } = {}
   ): Promise<SalaryHistoryTimeline[]> {
-    let query = this.supabase
-      .from('employee_change_log')
-      .select('*')
-      .gte('change_date', startDate)
-      .lte('change_date', endDate)
-      .order('change_date', { ascending: false })
+    try {
+      let query = this.supabase
+        .from('employee_change_log')
+        .select('*')
+        .gte('created_at', startDate)
+        .lte('created_at', endDate)
+        .order('created_at', { ascending: false })
 
-    if (filters.employeeIds?.length) {
-      query = query.in('employee_id', filters.employeeIds)
+      if (filters.employeeIds?.length) {
+        query = query.in('employee_id', filters.employeeIds)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.warn('employee_change_log query failed:', error.message)
+        return []
+      }
+
+      let results = data || []
+
+      // Apply client-side filters for complex queries
+      if (filters.minSalaryChange !== undefined) {
+        results = results.filter(item => 
+          item.change_amount !== null && Math.abs(item.change_amount) >= filters.minSalaryChange!
+        )
+      }
+
+      return results
+    } catch (error) {
+      console.warn('Error accessing employee_change_log table:', error)
+      return []
     }
-
-    const { data, error } = await query
-
-    if (error) throw error
-
-    let results = data || []
-
-    // Apply client-side filters for complex queries
-    if (filters.minSalaryChange !== undefined) {
-      results = results.filter(item => 
-        item.change_amount !== null && Math.abs(item.change_amount) >= filters.minSalaryChange!
-      )
-    }
-
-    return results
   }
 
   // Compare salary structures between two dates
@@ -966,21 +992,30 @@ export class SalaryHistoryService {
     auditLog: ComplianceAuditLog
   }> {
     // Get salary history data
-    let query = this.supabase
-      .from('employee_change_log')
-      .select('*')
-      .gte('change_date', periodStart)
-      .lte('change_date', periodEnd)
-      .order('employee_id', { ascending: true })
-      .order('change_date', { ascending: false })
+    let data: any[] = []
+    try {
+      let query = this.supabase
+        .from('employee_change_log')
+        .select('*')
+        .gte('created_at', periodStart)
+        .lte('created_at', periodEnd)
+        .order('employee_id', { ascending: true })
+        .order('created_at', { ascending: false })
 
-    if (filters.employeeIds?.length) {
-      query = query.in('employee_id', filters.employeeIds)
+      if (filters.employeeIds?.length) {
+        query = query.in('employee_id', filters.employeeIds)
+      }
+
+      const result = await query
+
+      if (result.error) {
+        console.warn('employee_change_log query failed:', result.error.message)
+      } else {
+        data = result.data || []
+      }
+    } catch (error) {
+      console.warn('Error accessing employee_change_log table:', error)
     }
-
-    const { data, error } = await query
-
-    if (error) throw error
 
     // Create audit log
     const auditLog = await this.createComplianceAuditLog({

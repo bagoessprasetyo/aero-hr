@@ -100,8 +100,8 @@ export function BulkOperations({ className }: BulkOperationsProps) {
       setEmployees(employeeData.filter(emp => emp.employee_status === 'active'))
       
       // Extract unique departments and positions
-      const uniqueDepts = [...new Set(employeeData.map(emp => emp.department))]
-      const uniquePositions = [...new Set(employeeData.map(emp => emp.position_title))]
+      const uniqueDepts = [...new Set(employeeData.map(emp => emp.department_id))]
+      const uniquePositions = [...new Set(employeeData.map(emp => emp.position_id))]
       setDepartments(uniqueDepts)
       setPositions(uniquePositions)
     } catch (error) {
@@ -130,12 +130,12 @@ export function BulkOperations({ className }: BulkOperationsProps) {
   }
 
   const filterEmployeesByDepartment = (department: string) => {
-    const deptEmployees = employees.filter(emp => emp.department === department)
+    const deptEmployees = employees.filter(emp => emp.department_id === department)
     setSelectedEmployees(new Set(deptEmployees.map(emp => emp.id)))
   }
 
   const filterEmployeesByPosition = (position: string) => {
-    const posEmployees = employees.filter(emp => emp.position_title === position)
+    const posEmployees = employees.filter(emp => emp.position_id === position)
     setSelectedEmployees(new Set(posEmployees.map(emp => emp.id)))
   }
 
@@ -467,12 +467,12 @@ export function BulkOperations({ className }: BulkOperationsProps) {
               {loading ? (
                 <div className="space-y-2">
                   {[1, 2, 3, 4, 5].map(i => (
-                    <LoadingSkeleton key={i} lines={1} className="h-12" />
+                    <LoadingSkeleton key={i} className="h-12" />
                   ))}
                 </div>
               ) : employees.length === 0 ? (
                 <EmptyState
-                  icon={<Users className="h-12 w-12" />}
+                  icon={Users}
                   title="No employees found"
                   description="No active employees available for bulk operations"
                 />
@@ -492,7 +492,7 @@ export function BulkOperations({ className }: BulkOperationsProps) {
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-900">{employee.full_name}</p>
                         <p className="text-sm text-gray-600">
-                          {employee.position_title} • {employee.department}
+                          {employee.position_id} • {employee.department_id}
                         </p>
                       </div>
                       <Badge variant="outline" className="text-xs">
@@ -730,10 +730,10 @@ export function BulkOperations({ className }: BulkOperationsProps) {
                       <td className="p-3">
                         <div>
                           <p className="font-medium text-gray-900">{item.employee.full_name}</p>
-                          <p className="text-xs text-gray-600">{item.employee.position_title}</p>
+                          <p className="text-xs text-gray-600">{item.employee.position?.position_title}</p>
                         </div>
                       </td>
-                      <td className="p-3 text-gray-700">{item.employee.department}</td>
+                      <td className="p-3 text-gray-700">{item.employee.department?.department_name}</td>
                       <td className="p-3 text-right font-medium">
                         {formatCurrency(item.currentSalary)}
                       </td>

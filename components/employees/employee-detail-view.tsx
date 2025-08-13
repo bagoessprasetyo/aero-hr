@@ -17,7 +17,17 @@ import {
   Calculator,
   FileText,
   Plus,
-  Trash2
+  Trash2,
+  Calendar,
+  Clock,
+  BarChart3,
+  TrendingUp,
+  Copy,
+  Mail,
+  Phone,
+  MapPin,
+  UserCheck,
+  Building
 } from "lucide-react"
 import { EmployeeService } from "@/lib/services/employees"
 import type { EmployeeWithSalaryComponents } from "@/lib/types/database"
@@ -145,136 +155,370 @@ export function EmployeeDetailView({ employeeId }: EmployeeDetailViewProps) {
   const payrollPreview = calculatePayrollPreview()
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => router.push('/employees')}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">{employee.full_name}</h1>
-            <p className="text-muted-foreground">
-              {employee.position_title} • {employee.department}
-            </p>
+    <div className="space-y-8">
+      {/* Modern Header */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+          {/* Back Button & Breadcrumb */}
+          <div className="flex items-center space-x-4 w-full lg:w-auto">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => router.push('/employees')}
+              className="shrink-0"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+            <div className="text-sm text-muted-foreground">
+              <span>Employees</span> / <span className="text-gray-900 font-medium">{employee.full_name}</span>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          {getStatusBadge(employee.employee_status)}
-          {getEmploymentTypeBadge(employee.employment_status)}
-          <Button onClick={() => router.push(`/employees/${employeeId}/edit`)}>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit Employee
-          </Button>
+          
+          {/* Profile Section */}
+          <div className="flex items-center gap-6 flex-1">
+            {/* Avatar */}
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <span className="text-2xl font-bold text-white">
+                {employee.full_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+              </span>
+            </div>
+            
+            {/* Employee Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl font-bold text-gray-900">{employee.full_name}</h1>
+                <div className="flex items-center gap-2">
+                  {getStatusBadge(employee.employee_status)}
+                  {getEmploymentTypeBadge(employee.employment_status)}
+                </div>
+              </div>
+              <p className="text-lg text-gray-600 mb-2">
+                {employee.position?.position_title || 'N/A'} • {employee.department?.department_name || 'N/A'}
+              </p>
+              <div className="flex items-center gap-4 text-sm text-gray-500">
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  <span>Joined {new Date(employee.join_date).toLocaleDateString('id-ID', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <User className="h-4 w-4" />
+                  <span>ID: {employee.employee_id}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Quick Actions */}
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => window.print()}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Print
+            </Button>
+            <Button 
+              onClick={() => router.push(`/employees/${employeeId}/edit`)}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Employee
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Enhanced Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="salary">Salary Components</TabsTrigger>
-          <TabsTrigger value="salary-history">Salary History</TabsTrigger>
-          <TabsTrigger value="salary-comparison">Salary Analysis</TabsTrigger>
-          <TabsTrigger value="calculations">Tax & BPJS</TabsTrigger>
-          <TabsTrigger value="history">Employment History</TabsTrigger>
-        </TabsList>
+        <div className="border-b border-gray-200 bg-white rounded-lg shadow-sm">
+          <TabsList className="w-full bg-transparent p-1 h-auto grid grid-cols-3 lg:grid-cols-6 gap-1">
+            <TabsTrigger 
+              value="overview" 
+              className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 rounded-lg transition-all"
+            >
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">Overview</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="salary" 
+              className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 rounded-lg transition-all"
+            >
+              <Calculator className="h-4 w-4" />
+              <span className="hidden sm:inline">Salary</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="salary-history" 
+              className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 rounded-lg transition-all"
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">History</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="salary-comparison" 
+              className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 rounded-lg transition-all"
+            >
+              <TrendingUp className="h-4 w-4" />
+              <span className="hidden sm:inline">Analysis</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="calculations" 
+              className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 rounded-lg transition-all"
+            >
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">Tax & BPJS</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="timeline" 
+              className="flex items-center gap-2 py-3 px-4 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 rounded-lg transition-all"
+            >
+              <Clock className="h-4 w-4" />
+              <span className="hidden sm:inline">Timeline</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
+        <TabsContent value="overview" className="space-y-8">
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-blue-600">Tenure</p>
+                    <p className="text-2xl font-bold text-blue-900">
+                      {Math.floor((new Date().getTime() - new Date(employee.join_date).getTime()) / (1000 * 60 * 60 * 24 * 30))} months
+                    </p>
+                  </div>
+                  <Calendar className="h-8 w-8 text-blue-500" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-green-600">Status</p>
+                    <p className="text-2xl font-bold text-green-900 capitalize">{employee.employee_status}</p>
+                  </div>
+                  <UserCheck className="h-8 w-8 text-green-500" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-purple-600">Type</p>
+                    <p className="text-2xl font-bold text-purple-900 capitalize">{employee.employment_status}</p>
+                  </div>
+                  <Briefcase className="h-8 w-8 text-purple-500" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-orange-600">BPJS</p>
+                    <p className="text-xl font-bold text-orange-900">
+                      {(employee.bpjs_health_enrolled ? 1 : 0) + (employee.bpjs_manpower_enrolled ? 1 : 0)}/2
+                    </p>
+                  </div>
+                  <Shield className="h-8 w-8 text-orange-500" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
             {/* Personal Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <User className="h-5 w-5" />
+            <Card className="bg-gradient-to-br from-white to-gray-50 border-gray-200">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center space-x-2 text-xl">
+                  <User className="h-6 w-6 text-blue-600" />
                   <span>Personal Information</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Employee ID</p>
-                    <p className="font-mono">{employee.employee_id}</p>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Employee ID</p>
+                      <p className="font-mono text-lg font-semibold">{employee.employee_id}</p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => navigator.clipboard?.writeText(employee.employee_id)}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Full Name</p>
-                    <p>{employee.full_name}</p>
+                  
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">National ID (NIK)</p>
+                      <p className="font-mono text-lg font-semibold">{employee.nik}</p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => navigator.clipboard?.writeText(employee.nik)}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
                   </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">NIK</p>
-                    <p className="font-mono">{employee.nik}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">NPWP</p>
-                    <p className="font-mono">{employee.npwp ? formatNPWP(employee.npwp) : 'Not provided'}</p>
-                  </div>
+                  
+                  {employee.npwp && (
+                    <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Tax ID (NPWP)</p>
+                        <p className="font-mono text-lg font-semibold">{formatNPWP(employee.npwp)}</p>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => navigator.clipboard?.writeText(employee.npwp || '')}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {(employee.email || employee.phone) && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Email</p>
-                      <p>{employee.email || 'Not provided'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Phone</p>
-                      <p>{employee.phone || 'Not provided'}</p>
-                    </div>
+                  <div className="space-y-3">
+                    {employee.email && (
+                      <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <Mail className="h-5 w-5 text-blue-600" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-blue-600">Email Address</p>
+                          <p className="text-blue-900">{employee.email}</p>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => window.open(`mailto:${employee.email}`)}
+                        >
+                          <Mail className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {employee.phone && (
+                      <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                        <Phone className="h-5 w-5 text-green-600" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-green-600">Phone Number</p>
+                          <p className="text-green-900">{employee.phone}</p>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => window.open(`tel:${employee.phone}`)}
+                        >
+                          <Phone className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {employee.address && (
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Address</p>
-                    <p className="text-sm">{employee.address}</p>
+                  <div className="p-3 bg-gray-50 rounded-lg border">
+                    <div className="flex items-start gap-3">
+                      <MapPin className="h-5 w-5 text-gray-600 mt-1" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Address</p>
+                        <p className="text-gray-900">{employee.address}</p>
+                      </div>
+                    </div>
                   </div>
                 )}
               </CardContent>
             </Card>
 
             {/* Employment Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Briefcase className="h-5 w-5" />
+            <Card className="bg-gradient-to-br from-white to-gray-50 border-gray-200">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center space-x-2 text-xl">
+                  <Briefcase className="h-6 w-6 text-green-600" />
                   <span>Employment Information</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Position</p>
-                    <p>{employee.position_title}</p>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-white rounded-lg border border-green-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <Briefcase className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Position</p>
+                        <p className="font-semibold text-lg text-gray-900">{employee.position?.position_title || 'N/A'}</p>
+                        {employee.position?.position_code && (
+                          <p className="text-sm text-gray-500">Code: {employee.position.position_code}</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Department</p>
-                    <p>{employee.department}</p>
+                  
+                  <div className="p-4 bg-white rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Building className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Department</p>
+                        <p className="font-semibold text-lg text-gray-900">{employee.department?.department_name || 'N/A'}</p>
+                        {employee.department?.department_code && (
+                          <p className="text-sm text-gray-500">Code: {employee.department.department_code}</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Join Date</p>
-                    <p>{new Date(employee.join_date).toLocaleDateString('id-ID')}</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                    <div className="text-center">
+                      <Calendar className="h-6 w-6 text-blue-600 mx-auto mb-2" />
+                      <p className="text-sm font-medium text-blue-600">Join Date</p>
+                      <p className="font-bold text-blue-900">
+                        {new Date(employee.join_date).toLocaleDateString('id-ID', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Employment Type</p>
-                    <p className="capitalize">{employee.employment_status}</p>
+                  
+                  <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                    <div className="text-center">
+                      <FileText className="h-6 w-6 text-purple-600 mx-auto mb-2" />
+                      <p className="text-sm font-medium text-purple-600">Employment Type</p>
+                      <p className="font-bold text-purple-900 capitalize">{employee.employment_status}</p>
+                    </div>
                   </div>
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Status</p>
-                  <div className="mt-1">
-                    {getStatusBadge(employee.employee_status)}
+                  
+                  <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                    <div className="text-center">
+                      <UserCheck className="h-6 w-6 text-green-600 mx-auto mb-2" />
+                      <p className="text-sm font-medium text-green-600">Current Status</p>
+                      <div className="mt-2">
+                        {getStatusBadge(employee.employee_status)}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -292,7 +536,7 @@ export function EmployeeDetailView({ employeeId }: EmployeeDetailViewProps) {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Bank Name</p>
-                    <p>{employee.bank_name}</p>
+                    <p>{employee.bank?.bank_name || employee.bank_name || 'Not provided'}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Account Number</p>
@@ -454,53 +698,137 @@ export function EmployeeDetailView({ employeeId }: EmployeeDetailViewProps) {
           )}
         </TabsContent>
 
-        <TabsContent value="history" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <FileText className="h-5 w-5" />
-                <span>Employment History</span>
+        <TabsContent value="timeline" className="space-y-6">
+          <Card className="bg-gradient-to-br from-white to-gray-50 border-gray-200">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center space-x-2 text-xl">
+                <Clock className="h-6 w-6 text-indigo-600" />
+                <span>Employee Timeline</span>
               </CardTitle>
               <CardDescription>
-                Key events and changes in employment record
+                Complete activity history and key milestones
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-4 p-4 border-l-4 border-blue-500 bg-blue-50">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="font-medium">Employee Created</p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(employee.created_at).toLocaleDateString('id-ID')} • 
-                      Initial profile setup completed
-                    </p>
-                  </div>
-                </div>
+              <div className="relative">
+                {/* Timeline line */}
+                <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 via-green-500 to-gray-300"></div>
                 
-                <div className="flex items-center space-x-4 p-4 border-l-4 border-green-500 bg-green-50">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="font-medium">Employment Started</p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(employee.join_date).toLocaleDateString('id-ID')} • 
-                      Joined as {employee.position_title} in {employee.department}
-                    </p>
-                  </div>
-                </div>
-
-                {employee.updated_at !== employee.created_at && (
-                  <div className="flex items-center space-x-4 p-4 border-l-4 border-yellow-500 bg-yellow-50">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="font-medium">Profile Updated</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(employee.updated_at).toLocaleDateString('id-ID')} • 
-                        Employee information was modified
+                <div className="space-y-6">
+                  {/* Current Status */}
+                  <div className="relative flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg relative z-10">
+                      <UserCheck className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="flex-1 bg-white p-4 rounded-lg border shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-green-800">Current Status</h3>
+                        <span className="text-xs text-gray-500">Now</span>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {employee.employee_status === 'active' ? 'Currently active employee' : 
+                         employee.employee_status === 'resigned' ? 'Employee has resigned' : 
+                         'Employment terminated'} • 
+                        {employee.employment_status === 'permanent' ? 'Permanent position' : 'Contract position'}
                       </p>
+                      <div className="mt-2">
+                        {getStatusBadge(employee.employee_status)}
+                      </div>
                     </div>
                   </div>
-                )}
+
+                  {/* Last Profile Update */}
+                  {employee.updated_at !== employee.created_at && (
+                    <div className="relative flex items-start space-x-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg relative z-10">
+                        <Edit className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="flex-1 bg-white p-4 rounded-lg border shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-yellow-800">Profile Updated</h3>
+                          <span className="text-xs text-gray-500">
+                            {new Date(employee.updated_at).toLocaleDateString('id-ID', { 
+                              year: 'numeric', 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Employee information was last modified
+                        </p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Calendar className="h-4 w-4 text-gray-400" />
+                          <span className="text-xs text-gray-500">
+                            {new Date(employee.updated_at).toLocaleDateString('id-ID', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Employment Start */}
+                  <div className="relative flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg relative z-10">
+                      <Briefcase className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="flex-1 bg-white p-4 rounded-lg border shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-blue-800">Employment Started</h3>
+                        <span className="text-xs text-gray-500">
+                          {new Date(employee.join_date).toLocaleDateString('id-ID', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Joined as <span className="font-medium">{employee.position?.position_title || 'N/A'}</span> in 
+                        <span className="font-medium"> {employee.department?.department_name || 'N/A'}</span> department
+                      </p>
+                      <div className="flex items-center gap-4 mt-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-blue-100 rounded-full"></div>
+                          <span className="text-xs text-gray-600">
+                            Tenure: {Math.floor((new Date().getTime() - new Date(employee.join_date).getTime()) / (1000 * 60 * 60 * 24 * 30))} months
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Profile Created */}
+                  <div className="relative flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center shadow-lg relative z-10">
+                      <User className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="flex-1 bg-white p-4 rounded-lg border shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-purple-800">Profile Created</h3>
+                        <span className="text-xs text-gray-500">
+                          {new Date(employee.created_at).toLocaleDateString('id-ID', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Employee profile was created in the system
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <User className="h-4 w-4 text-gray-400" />
+                        <span className="text-xs text-gray-500 font-mono">ID: {employee.employee_id}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

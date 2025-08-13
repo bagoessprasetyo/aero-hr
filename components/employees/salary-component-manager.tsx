@@ -17,9 +17,7 @@ import {
   StatusBadge, 
   ActionButton, 
   EmptyState, 
-  FormSection,
-  LoadingSkeleton,
-  designUtils 
+  LoadingSkeleton
 } from "@/components/ui/professional"
 import { 
   Plus, 
@@ -329,24 +327,21 @@ export function SalaryComponentManager({ employee, onUpdate }: SalaryComponentMa
           title="Total Gross Salary"
           value={formatCurrency(totalSalary)}
           subtitle={`${components.filter(c => c.is_active).length} active components`}
-          icon={<DollarSign className="h-4 w-4" />}
-          module="salary"
+          icon={DollarSign}
         />
 
         <StatsCard
           title="Basic Salary"
           value={formatCurrency(basicSalary)}
           subtitle={`${((basicSalary / totalSalary) * 100 || 0).toFixed(1)}% of total`}
-          icon={<TrendingUp className="h-4 w-4" />}
-          module="employee"
+          icon={TrendingUp}
         />
 
         <StatsCard
           title="Allowances"
           value={formatCurrency(allowances)}
           subtitle={`${((allowances / totalSalary) * 100 || 0).toFixed(1)}% of total`}
-          icon={<Plus className="h-4 w-4" />}
-          module="payroll"
+          icon={Plus}
         />
       </div>
 
@@ -485,23 +480,18 @@ export function SalaryComponentManager({ employee, onUpdate }: SalaryComponentMa
           {loading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <LoadingSkeleton key={i} lines={2} className="p-4" />
+                <LoadingSkeleton key={i} className="p-4" />
               ))}
             </div>
           ) : components.length === 0 ? (
             <EmptyState
-              icon={<DollarSign className="h-12 w-12" />}
+              icon={DollarSign}
               title="No salary components configured"
               description="Start by adding a basic salary for this employee"
-              action={
-                <ActionButton 
-                  variant="primary"
-                  onClick={() => setIsAddDialogOpen(true)}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Basic Salary
-                </ActionButton>
-              }
+              action={{
+                label: "Add Basic Salary",
+                onClick: () => setIsAddDialogOpen(true)
+              }}
             />
           ) : (
             <div className="space-y-3">
@@ -510,7 +500,7 @@ export function SalaryComponentManager({ employee, onUpdate }: SalaryComponentMa
                   key={component.id}
                   className={cn(
                     "group relative overflow-hidden rounded-lg border bg-white p-4",
-                    designUtils.getHoverTransition(),
+                    "transition-all duration-200",
                     "hover:shadow-md hover:border-gray-300"
                   )}
                 >
