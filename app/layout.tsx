@@ -5,6 +5,7 @@ import { LayoutWrapper } from "@/components/layout/layout-wrapper";
 import { ToastProvider } from "@/components/ui/toast";
 import { KeyboardShortcutsProvider, SkipToMainContent } from "@/components/common/keyboard-shortcuts";
 import { RBACProvider } from "@/lib/contexts/rbac-context";
+import { HelpProvider } from "@/components/help/help-provider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -34,12 +35,14 @@ export default function RootLayout({
       >
         <ToastProvider>
           <RBACProvider>
-            <KeyboardShortcutsProvider>
-              <SkipToMainContent />
-              <LayoutWrapper>
-                {children}
-              </LayoutWrapper>
-            </KeyboardShortcutsProvider>
+            <HelpProvider>
+              <KeyboardShortcutsProvider>
+                <SkipToMainContent />
+                <LayoutWrapper>
+                  {children}
+                </LayoutWrapper>
+              </KeyboardShortcutsProvider>
+            </HelpProvider>
           </RBACProvider>
         </ToastProvider>
       </body>

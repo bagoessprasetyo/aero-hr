@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { SidebarProvider, useSidebar } from '@/components/layout/sidebar-provider';
 import { Sidebar } from '@/components/layout/sidebar';
 import { SidebarToggle } from '@/components/layout/sidebar-toggle';
+import { HelpFloatingButton } from '@/components/help/help-floating-button';
 import { cn } from '@/lib/utils';
 
 interface LayoutWrapperProps {
@@ -56,6 +57,9 @@ function LayoutContent({ children }: LayoutWrapperProps) {
           </div>
         </main>
       </div>
+      
+      {/* Help Floating Button */}
+      <HelpFloatingButton />
     </div>
   );
 }

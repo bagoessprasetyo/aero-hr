@@ -68,6 +68,13 @@ const navigationItems = [
       { id: 'tax', label: 'Tax Reports', icon: FileText, href: '/tax', permission: 'reports.read' },
     ]
   },
+  {
+    id: 'support',
+    title: 'Support',
+    items: [
+      { id: 'help', label: 'Help & Support', icon: HelpCircle, href: '/help', permission: null },
+    ]
+  }
   // {
   //   id: 'insights',
   //   title: 'Insights',
@@ -278,6 +285,8 @@ export function Sidebar() {
   const handleUserAction = (action: string) => {
     if (action === 'logout') {
       handleSignOut()
+    } else if (action === 'help') {
+      router.push('/help')
     } else {
       console.log('User action:', action)
     }
