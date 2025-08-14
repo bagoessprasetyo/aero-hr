@@ -347,7 +347,7 @@ export function SalaryComponentManager({ employee, onUpdate }: SalaryComponentMa
 
       {/* Quick Add Templates */}
       {components.length === 0 && (
-        <ProfessionalCard module="employee" className="border-dashed">
+        <ProfessionalCard className="border-dashed">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 text-base">
               <Plus className="h-4 w-4" />
@@ -435,7 +435,7 @@ export function SalaryComponentManager({ employee, onUpdate }: SalaryComponentMa
       )}
 
       {/* Main Content */}
-      <ProfessionalCard module="salary">
+      <ProfessionalCard>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>

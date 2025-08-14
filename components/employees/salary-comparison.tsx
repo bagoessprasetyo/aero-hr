@@ -147,7 +147,7 @@ export function SalaryComparison({ employee, className }: SalaryComparisonProps)
   return (
     <div className={cn("space-y-6", className)}>
       {/* Header and Controls */}
-      <ProfessionalCard module="employee">
+      <ProfessionalCard>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>

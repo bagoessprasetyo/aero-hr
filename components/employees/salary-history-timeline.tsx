@@ -210,7 +210,7 @@ export function SalaryHistoryTimelineComponent({ employee, className }: SalaryHi
   return (
     <div className={cn("space-y-6", className)}>
       {/* Header with Summary */}
-      <ProfessionalCard module="salary">
+      <ProfessionalCard>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>

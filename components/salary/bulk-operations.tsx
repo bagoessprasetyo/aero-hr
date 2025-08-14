@@ -308,7 +308,7 @@ export function BulkOperations({ className }: BulkOperationsProps) {
   return (
     <div className={cn("space-y-6", className)}>
       {/* Header */}
-      <ProfessionalCard module="payroll">
+      <ProfessionalCard>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center space-x-2">

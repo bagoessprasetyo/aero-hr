@@ -23,14 +23,14 @@ function LayoutContent({ children }: LayoutWrapperProps) {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="h-screen flex overflow-hidden">
       {/* Sidebar */}
       <Sidebar />
       
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Mobile Header with Sidebar Toggle */}
-        <header className="lg:hidden sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <header className="lg:hidden flex-shrink-0 sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex h-16 items-center justify-between px-4">
             <div className="flex items-center gap-3">
               <SidebarToggle />
@@ -49,7 +49,7 @@ function LayoutContent({ children }: LayoutWrapperProps) {
         {/* Main Content */}
         <main 
           id="main-content" 
-          className="flex-1 overflow-auto lg:p-8 p-4"
+          className="flex-1 overflow-y-auto lg:p-8 p-4"
         >
           <div className="container mx-auto max-w-7xl">
             {children}

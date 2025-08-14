@@ -10,41 +10,31 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { LucideIcon } from 'lucide-react'
 
-// Enhanced Professional Card Component
+// Modern Professional Card Component
 interface ProfessionalCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  module?: 'employee' | 'salary' | 'payroll' | 'tax'
-  variant?: 'default' | 'elevated' | 'interactive'
+  variant?: 'default' | 'elevated' | 'interactive' | 'outlined' | 'minimal'
   children: React.ReactNode
 }
 
 export function ProfessionalCard({ 
-  module, 
   variant = 'default', 
   className, 
   children, 
   ...props 
 }: ProfessionalCardProps) {
-  const baseClasses = 'bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl shadow-sm overflow-hidden'
-  
   const variantClasses = {
-    default: '',
-    elevated: 'shadow-lg',
-    interactive: 'hover:shadow-lg transition-shadow duration-300 cursor-pointer'
+    default: 'bg-white border border-gray-200/60 shadow-sm',
+    elevated: 'bg-white border border-gray-200/60 shadow-lg shadow-gray-900/5',
+    interactive: 'bg-white border border-gray-200/60 shadow-sm hover:shadow-lg hover:shadow-gray-900/5 hover:border-gray-300/60 transition-all duration-300 cursor-pointer',
+    outlined: 'bg-white border-2 border-gray-200 shadow-none hover:border-gray-300 transition-colors duration-200',
+    minimal: 'bg-gray-50/30 border border-gray-100 shadow-none'
   }
-  
-  const moduleClasses = module ? {
-    employee: 'bg-employee-50',
-    salary: 'bg-salary-50', 
-    payroll: 'bg-payroll-50',
-    tax: 'bg-primary-50'
-  }[module] : ''
   
   return (
     <Card 
       className={cn(
-        baseClasses,
+        'rounded-2xl overflow-hidden backdrop-blur-sm',
         variantClasses[variant],
-        moduleClasses,
         className
       )}
       {...props}
@@ -54,40 +44,59 @@ export function ProfessionalCard({
   )
 }
 
-// Professional Status Badge
-interface StatusBadgeProps {
+// Modern Status Badge
+interface StatusBadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   status: 'active' | 'inactive' | 'pending' | 'error' | 'success' | 'warning'
   children: React.ReactNode
-  className?: string
+  variant?: 'default' | 'subtle' | 'outline'
 }
 
-export function StatusBadge({ status, children, className }: StatusBadgeProps) {
+export function StatusBadge({ status, children, className, variant = 'default', ...props }: StatusBadgeProps) {
   const statusClasses = {
-    active: 'bg-green-100 text-green-800 border-green-200',
-    inactive: 'bg-gray-100 text-gray-800 border-gray-200',
-    pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    error: 'bg-red-100 text-red-800 border-red-200',
-    success: 'bg-green-100 text-green-800 border-green-200',
-    warning: 'bg-yellow-100 text-yellow-800 border-yellow-200'
+    default: {
+      active: 'bg-emerald-100 text-emerald-800 ring-emerald-600/20',
+      inactive: 'bg-gray-100 text-gray-700 ring-gray-500/20',
+      pending: 'bg-amber-100 text-amber-800 ring-amber-600/20',
+      error: 'bg-red-100 text-red-800 ring-red-600/20',
+      success: 'bg-emerald-100 text-emerald-800 ring-emerald-600/20',
+      warning: 'bg-amber-100 text-amber-800 ring-amber-600/20'
+    },
+    subtle: {
+      active: 'bg-emerald-50 text-emerald-700 ring-emerald-600/10',
+      inactive: 'bg-gray-50 text-gray-600 ring-gray-500/10',
+      pending: 'bg-amber-50 text-amber-700 ring-amber-600/10',
+      error: 'bg-red-50 text-red-700 ring-red-600/10',
+      success: 'bg-emerald-50 text-emerald-700 ring-emerald-600/10',
+      warning: 'bg-amber-50 text-amber-700 ring-amber-600/10'
+    },
+    outline: {
+      active: 'bg-white text-emerald-700 ring-emerald-600/40 border border-emerald-200',
+      inactive: 'bg-white text-gray-600 ring-gray-500/40 border border-gray-200',
+      pending: 'bg-white text-amber-700 ring-amber-600/40 border border-amber-200',
+      error: 'bg-white text-red-700 ring-red-600/40 border border-red-200',
+      success: 'bg-white text-emerald-700 ring-emerald-600/40 border border-emerald-200',
+      warning: 'bg-white text-amber-700 ring-amber-600/40 border border-amber-200'
+    }
   }
   
   return (
-    <Badge 
+    <span 
       className={cn(
-        'px-2.5 py-0.5 text-xs font-medium border',
-        statusClasses[status],
+        'inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium ring-1 ring-inset transition-colors duration-200',
+        statusClasses[variant][status],
         className
       )}
+      {...props}
     >
       {children}
-    </Badge>
+    </span>
   )
 }
 
-// Professional Action Button
+// Modern Action Button
 interface ActionButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'error'
-  size?: 'sm' | 'md' | 'lg'
+  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'ghost' | 'outline'
+  size?: 'sm' | 'md' | 'lg' | 'xl'
   children: React.ReactNode
 }
 
@@ -99,23 +108,26 @@ export function ActionButton({
   ...props 
 }: ActionButtonProps) {
   const variantClasses = {
-    primary: 'bg-blue-600 hover:bg-blue-700 text-white border-transparent',
-    secondary: 'bg-gray-100 hover:bg-gray-200 text-gray-900 border-gray-300',
-    success: 'bg-green-500 hover:bg-green-600 text-white border-transparent',
-    warning: 'bg-yellow-500 hover:bg-yellow-600 text-white border-transparent',
-    error: 'bg-red-500 hover:bg-red-600 text-white border-transparent'
+    primary: 'bg-gray-900 hover:bg-gray-800 text-white shadow-sm ring-1 ring-gray-900/10 hover:ring-gray-900/20',
+    secondary: 'bg-white hover:bg-gray-50 text-gray-900 shadow-sm ring-1 ring-gray-300 hover:ring-gray-400',
+    success: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm ring-1 ring-emerald-600/10 hover:ring-emerald-600/20',
+    warning: 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm ring-1 ring-amber-500/10 hover:ring-amber-500/20',
+    error: 'bg-red-600 hover:bg-red-700 text-white shadow-sm ring-1 ring-red-600/10 hover:ring-red-600/20',
+    ghost: 'bg-transparent hover:bg-gray-100 text-gray-700 hover:text-gray-900',
+    outline: 'bg-transparent hover:bg-gray-50 text-gray-700 border-2 border-gray-200 hover:border-gray-300'
   }
   
   const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base'
+    sm: 'px-2.5 py-1.5 text-xs rounded-lg',
+    md: 'px-3.5 py-2 text-sm rounded-lg',
+    lg: 'px-4 py-2.5 text-sm rounded-xl',
+    xl: 'px-6 py-3 text-base rounded-xl'
   }
   
   return (
     <Button
       className={cn(
-        'font-medium border transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+        'inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900/20 disabled:opacity-50 disabled:pointer-events-none',
         variantClasses[variant],
         sizeClasses[size],
         className
@@ -127,7 +139,7 @@ export function ActionButton({
   )
 }
 
-// Enhanced Dashboard Widget
+// Modern Dashboard Widget
 interface DashboardWidgetProps {
   title: string
   value: string | number
@@ -153,48 +165,50 @@ export function DashboardWidget({
 }: DashboardWidgetProps) {
   return (
     <Card className={cn(
-      "relative overflow-hidden bg-gradient-to-br from-white to-gray-50/50 border-gray-200 hover:shadow-md transition-all duration-300",
+      "relative bg-white border border-gray-200/60 shadow-sm hover:shadow-lg hover:shadow-gray-900/5 hover:border-gray-300/60 transition-all duration-300 rounded-2xl overflow-hidden group",
       className
     )}>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium text-gray-600">
-            {title}
-          </CardTitle>
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <CardTitle className="text-sm font-medium text-gray-600 group-hover:text-gray-700 transition-colors">
+              {title}
+            </CardTitle>
+          </div>
           {Icon && (
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <Icon className="h-5 w-5 text-blue-600" />
+            <div className="flex-shrink-0 p-2.5 bg-gray-50 rounded-xl group-hover:bg-gray-100 transition-colors">
+              <Icon className="h-5 w-5 text-gray-600" />
             </div>
           )}
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
-        <div className="space-y-2">
-          <div className="text-3xl font-bold text-gray-900">
+      <CardContent className="pt-0 pb-6">
+        <div className="space-y-3">
+          <div className="text-2xl font-bold text-gray-900 tracking-tight">
             {typeof value === 'number' ? value.toLocaleString() : value}
           </div>
           
           {subtitle && (
-            <p className="text-sm text-gray-600">{subtitle}</p>
+            <p className="text-sm text-gray-500 leading-relaxed">{subtitle}</p>
           )}
           
           {trend && (
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2">
               <span className={cn(
-                "flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
+                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ring-1 ring-inset",
                 trend.isPositive 
-                  ? "bg-green-100 text-green-800" 
-                  : "bg-red-100 text-red-800"
+                  ? "bg-emerald-50 text-emerald-700 ring-emerald-600/20" 
+                  : "bg-red-50 text-red-700 ring-red-600/20"
               )}>
                 <span className={cn(
-                  "text-xs",
-                  trend.isPositive ? "text-green-600" : "text-red-600"
+                  "text-xs font-bold",
+                  trend.isPositive ? "text-emerald-600" : "text-red-600"
                 )}>
                   {trend.isPositive ? "↗" : "↘"}
                 </span>
                 {Math.abs(trend.value)}%
               </span>
-              <span className="text-gray-600">{trend.label}</span>
+              <span className="text-xs text-gray-500">{trend.label}</span>
             </div>
           )}
           
@@ -228,14 +242,14 @@ export function InteractiveStatsCard({
 
   return (
     <Card className={cn(
-      "bg-gradient-to-br from-white to-gray-50/50 border-gray-200",
+      "bg-white border border-gray-200/60 shadow-sm rounded-2xl",
       className
     )}>
       <CardHeader>
-        <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+        <CardTitle className="text-lg font-semibold text-gray-900">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {stats.map((stat, index) => {
             const percentage = total > 0 ? (stat.value / total) * 100 : 0
             
@@ -243,23 +257,23 @@ export function InteractiveStatsCard({
               <div
                 key={index}
                 className={cn(
-                  "flex items-center justify-between p-3 rounded-lg transition-all duration-200",
-                  onItemClick && "cursor-pointer hover:bg-gray-50 hover:shadow-sm"
+                  "flex items-center justify-between p-3 rounded-xl transition-all duration-200 group",
+                  onItemClick && "cursor-pointer hover:bg-gray-50 hover:shadow-sm hover:scale-[1.02]"
                 )}
                 onClick={() => onItemClick?.(stat)}
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-3 h-3 rounded-full"
+                    className="w-3 h-3 rounded-full ring-2 ring-white shadow-sm"
                     style={{ backgroundColor: stat.color }}
                   />
-                  <span className="font-medium text-gray-900">{stat.label}</span>
+                  <span className="font-medium text-gray-900 group-hover:text-gray-800 transition-colors">{stat.label}</span>
                 </div>
                 <div className="text-right">
-                  <div className="font-semibold text-gray-900">
+                  <div className="font-semibold text-gray-900 group-hover:text-gray-800 transition-colors">
                     {stat.value}
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-500 group-hover:text-gray-600 transition-colors">
                     {percentage.toFixed(1)}%
                   </div>
                 </div>
@@ -289,31 +303,31 @@ interface QuickActionGridProps {
 export function QuickActionGrid({ actions, className }: QuickActionGridProps) {
   return (
     <div className={cn(
-      "grid grid-cols-2 md:grid-cols-4 gap-4",
+      "grid grid-cols-2 md:grid-cols-2 gap-3",
       className
     )}>
       {actions.map((action, index) => (
         <Card
           key={index}
-          className="p-4 cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-105 bg-gradient-to-br from-white to-gray-50/50 border-gray-200"
+          className="group p-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:shadow-gray-900/5 hover:scale-[1.02] bg-white border border-gray-200/60 rounded-2xl hover:border-gray-300/60"
           onClick={action.onClick}
         >
           <div className="text-center space-y-3">
             <div className={cn(
-              "mx-auto w-12 h-12 rounded-xl flex items-center justify-center",
-              action.color || "bg-blue-100"
+              "mx-auto w-11 h-11 rounded-2xl flex items-center justify-center transition-colors duration-200 group-hover:scale-110",
+              action.color || "bg-gray-100 group-hover:bg-gray-200"
             )}>
               <action.icon className={cn(
-                "h-6 w-6",
-                action.color ? "text-white" : "text-blue-600"
+                "h-5 w-5 transition-colors duration-200",
+                action.color ? "text-white" : "text-gray-600 group-hover:text-gray-700"
               )} />
             </div>
             <div>
-              <h3 className="font-medium text-gray-900 text-sm">
+              <h3 className="font-medium text-gray-900 text-sm group-hover:text-gray-800 transition-colors">
                 {action.label}
               </h3>
               {action.description && (
-                <p className="text-xs text-gray-600 mt-1">
+                <p className="text-xs text-gray-500 mt-1 group-hover:text-gray-600 transition-colors">
                   {action.description}
                 </p>
               )}
@@ -350,16 +364,16 @@ export function EmptyState({
       className
     )}>
       {Icon && (
-        <div className="mb-4 p-3 bg-gray-100 rounded-full">
+        <div className="mb-6 p-4 bg-gray-50 rounded-2xl ring-1 ring-gray-100">
           <Icon className="h-8 w-8 text-gray-400" />
         </div>
       )}
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-600 mb-6 max-w-md">{description}</p>
+      <h3 className="text-lg font-semibold text-gray-900 mb-3 tracking-tight">{title}</h3>
+      <p className="text-gray-500 mb-8 max-w-md leading-relaxed text-sm">{description}</p>
       {action && (
-        <Button onClick={action.onClick} className="mt-4">
+        <ActionButton variant="primary" onClick={action.onClick}>
           {action.label}
-        </Button>
+        </ActionButton>
       )}
     </div>
   )
@@ -377,15 +391,15 @@ export const StatsCard = DashboardWidget
 export function LoadingSkeleton({ className, variant = 'card' }: LoadingSkeletonProps) {
   if (variant === 'table') {
     return (
-      <div className={cn("space-y-3", className)}>
+      <div className={cn("space-y-4", className)}>
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex items-center space-x-4">
-            <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
+          <div key={i} className="flex items-center space-x-4 p-4 bg-white border border-gray-200/60 rounded-2xl">
+            <div className="w-10 h-10 bg-gray-100 rounded-2xl animate-pulse" />
             <div className="flex-1 space-y-2">
-              <div className="h-4 bg-gray-200 rounded animate-pulse" />
-              <div className="h-3 bg-gray-200 rounded animate-pulse w-2/3" />
+              <div className="h-4 bg-gray-100 rounded-lg animate-pulse" />
+              <div className="h-3 bg-gray-100 rounded-lg animate-pulse w-2/3" />
             </div>
-            <div className="w-20 h-4 bg-gray-200 rounded animate-pulse" />
+            <div className="w-20 h-4 bg-gray-100 rounded-lg animate-pulse" />
           </div>
         ))}
       </div>
@@ -396,9 +410,9 @@ export function LoadingSkeleton({ className, variant = 'card' }: LoadingSkeleton
     return (
       <div className={cn("space-y-4", className)}>
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="space-y-2">
-            <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
-            <div className="h-10 bg-gray-200 rounded animate-pulse" />
+          <div key={i} className="space-y-3">
+            <div className="h-4 w-24 bg-gray-100 rounded-lg animate-pulse" />
+            <div className="h-12 bg-gray-100 rounded-xl animate-pulse" />
           </div>
         ))}
       </div>
@@ -406,13 +420,13 @@ export function LoadingSkeleton({ className, variant = 'card' }: LoadingSkeleton
   }
 
   return (
-    <Card className={cn("p-6", className)}>
+    <Card className={cn("p-6 bg-white border border-gray-200/60 rounded-2xl", className)}>
       <div className="space-y-4">
-        <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
-        <div className="h-20 bg-gray-200 rounded animate-pulse" />
-        <div className="flex space-x-2">
-          <div className="h-4 bg-gray-200 rounded animate-pulse w-1/4" />
-          <div className="h-4 bg-gray-200 rounded animate-pulse w-1/4" />
+        <div className="h-4 bg-gray-100 rounded-lg animate-pulse w-3/4" />
+        <div className="h-20 bg-gray-100 rounded-xl animate-pulse" />
+        <div className="flex space-x-3">
+          <div className="h-4 bg-gray-100 rounded-lg animate-pulse w-1/4" />
+          <div className="h-4 bg-gray-100 rounded-lg animate-pulse w-1/4" />
         </div>
       </div>
     </Card>

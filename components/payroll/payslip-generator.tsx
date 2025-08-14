@@ -282,14 +282,14 @@ export function PayslipGenerator({ payrollId, payrollPeriod, className }: Paysli
       }
 
       // Generate all PDFs
-      const blobs = await PDFService.generateBulkPayslips(payslipsData)
+      const pdfs = await PDFService.generateBulkPayslips(payslipsData)
       
       // Note: This is a simplified approach. In a real implementation,
       // you might want to zip the files or provide individual download links
-      console.log(`Generated ${blobs.length} payslip PDFs`)
+      console.log(`Generated ${pdfs.length} payslip PDFs`)
       
       // For now, download the first few individually
-      for (let i = 0; i < Math.min(blobs.length, 5); i++) {
+      for (let i = 0; i < Math.min(pdfs.length, 5); i++) {
         const data = payslipsData[i]
         await PDFService.downloadPayslip(data, 
           `payslip-${data.employee.employee_id}-${payrollPeriod.period_year}-${String(payrollPeriod.period_month).padStart(2, '0')}.pdf`

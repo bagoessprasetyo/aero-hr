@@ -351,7 +351,7 @@ export function SalaryExport({ className }: SalaryExportProps) {
   return (
     <div className={cn("space-y-6", className)}>
       {/* Header */}
-      <ProfessionalCard module="payroll">
+      <ProfessionalCard>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <FileSpreadsheet className="h-5 w-5" />

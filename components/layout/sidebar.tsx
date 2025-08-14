@@ -314,7 +314,7 @@ export function Sidebar() {
         }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className={cn(
-          "fixed left-0 top-0 z-50 min-h-screen bg-background border-r border-border lg:relative",
+          "fixed left-0 top-0 z-50 h-screen bg-background border-r border-border lg:relative",
           // Mobile: hidden by default, shown when isMobileOpen is true
           "translate-x-[-100%] lg:translate-x-0",
           isMobileOpen && "translate-x-0"
