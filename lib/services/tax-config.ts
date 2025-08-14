@@ -54,30 +54,132 @@ export interface TaxConfiguration {
 export class TaxConfigService {
   async getCurrentTaxConfiguration(): Promise<TaxConfiguration> {
     try {
+      console.log('Fetching tax configuration from key-value structure...')
+      
+      // Get all active configuration entries
       const { data, error } = await supabase
         .from('app_configuration')
-        .select('*')
+        .select('key, value')
         .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          // No configuration found, return defaults
-          return this.getDefaultConfiguration()
-        }
+        console.error('Database error:', error)
         throw error
       }
 
-      return this.parseConfiguration(data)
+      if (!data || data.length === 0) {
+        console.log('No configuration found, returning defaults')
+        return this.getDefaultConfiguration()
+      }
+
+      console.log('Raw configuration data from database:', data)
+      return this.parseKeyValueConfiguration(data)
     } catch (error) {
       console.error('Error fetching tax configuration:', error)
       return this.getDefaultConfiguration()
     }
   }
 
-  private getDefaultConfiguration(): TaxConfiguration {
+  private parseKeyValueConfiguration(data: { key: string; value: string }[]): TaxConfiguration {
+    console.log('Parsing key-value configuration:', data)
+    
+    // Convert array to key-value map
+    const configMap = data.reduce((acc, item) => {
+      acc[item.key] = item.value
+      return acc
+    }, {} as Record<string, string>)
+    
+    console.log('Configuration map:', configMap)
+    
+    // Helper function to safely parse JSON or return default
+    const safeParseValue = (key: string, defaultValue: any) => {
+      try {
+        const value = configMap[key]
+        if (!value) return defaultValue
+        
+        // Try to parse as number first
+        if (!isNaN(Number(value))) {
+          return Number(value)
+        }
+        
+        // Try to parse as JSON
+        return JSON.parse(value)
+      } catch (error) {
+        console.warn(`Error parsing ${key}:`, error)
+        return defaultValue
+      }
+    }
+    
+    const defaultConfig = this.getDefaultConfiguration()
+    
+    // Parse PTKP amounts
+    const ptkp_amounts = {
+      TK_0: safeParseValue('ptkp_TK_0', defaultConfig.ptkp_amounts.TK_0),
+      TK_1: safeParseValue('ptkp_TK_1', defaultConfig.ptkp_amounts.TK_1),
+      TK_2: safeParseValue('ptkp_TK_2', defaultConfig.ptkp_amounts.TK_2),
+      TK_3: safeParseValue('ptkp_TK_3', defaultConfig.ptkp_amounts.TK_3),
+      K_0: safeParseValue('ptkp_K_0', defaultConfig.ptkp_amounts.K_0),
+      K_1: safeParseValue('ptkp_K_1', defaultConfig.ptkp_amounts.K_1),
+      K_2: safeParseValue('ptkp_K_2', defaultConfig.ptkp_amounts.K_2),
+      K_3: safeParseValue('ptkp_K_3', defaultConfig.ptkp_amounts.K_3)
+    }
+    
+    // Parse tax brackets
+    const tax_brackets = {
+      bracket_1: safeParseValue('tax_bracket_1', defaultConfig.tax_brackets.bracket_1),
+      bracket_2: safeParseValue('tax_bracket_2', defaultConfig.tax_brackets.bracket_2),
+      bracket_3: safeParseValue('tax_bracket_3', defaultConfig.tax_brackets.bracket_3),
+      bracket_4: safeParseValue('tax_bracket_4', defaultConfig.tax_brackets.bracket_4),
+      bracket_5: safeParseValue('tax_bracket_5', defaultConfig.tax_brackets.bracket_5)
+    }
+    
+    // Parse BPJS rates
+    const bpjs_rates = {
+      health: {
+        employee_rate: safeParseValue('bpjs_health_employee_rate', defaultConfig.bpjs_rates.health.employee_rate),
+        company_rate: safeParseValue('bpjs_health_company_rate', defaultConfig.bpjs_rates.health.company_rate),
+        max_salary: safeParseValue('bpjs_health_max_salary', defaultConfig.bpjs_rates.health.max_salary)
+      },
+      employment: {
+        jht: {
+          employee_rate: safeParseValue('bpjs_jht_employee_rate', defaultConfig.bpjs_rates.employment.jht.employee_rate),
+          company_rate: safeParseValue('bpjs_jht_company_rate', defaultConfig.bpjs_rates.employment.jht.company_rate)
+        },
+        jp: {
+          employee_rate: safeParseValue('bpjs_jp_employee_rate', defaultConfig.bpjs_rates.employment.jp.employee_rate),
+          company_rate: safeParseValue('bpjs_jp_company_rate', defaultConfig.bpjs_rates.employment.jp.company_rate)
+        },
+        jkk_rate: safeParseValue('bpjs_jkk_rate', defaultConfig.bpjs_rates.employment.jkk_rate),
+        jkm_rate: safeParseValue('bpjs_jkm_rate', defaultConfig.bpjs_rates.employment.jkm_rate)
+      }
+    }
+    
+    // Parse occupational cost
+    const occupational_cost = {
+      rate: safeParseValue('occupational_cost_rate', defaultConfig.occupational_cost.rate),
+      max_monthly: safeParseValue('occupational_cost_max_monthly', defaultConfig.occupational_cost.max_monthly)
+    }
+    
+    // Parse system fields
+    const effective_date = configMap['effective_date'] || defaultConfig.effective_date
+    const last_updated = configMap['last_updated'] || defaultConfig.last_updated
+    const updated_by = configMap['updated_by'] || defaultConfig.updated_by
+    
+    const parsedConfig = {
+      ptkp_amounts,
+      tax_brackets,
+      bpjs_rates,
+      occupational_cost,
+      effective_date,
+      last_updated,
+      updated_by
+    }
+    
+    console.log('Parsed configuration:', parsedConfig)
+    return parsedConfig
+  }
+
+  getDefaultConfiguration(): TaxConfiguration {
     return {
       ptkp_amounts: {
         TK_0: 54000000,   // 54 juta per tahun
@@ -136,6 +238,80 @@ export class TaxConfigService {
     }
   }
 
+  // Debug method to inspect database data
+  async debugDatabaseConfiguration(): Promise<any> {
+    try {
+      console.log('Debugging database configuration...')
+      
+      // Check if table exists and get all configurations
+      const { data: allConfigs, error: allError } = await supabase
+        .from('app_configuration')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      console.log('All configurations in database:', allConfigs)
+      console.log('Database query error:', allError)
+      
+      // Check specifically for active configuration
+      const { data: activeConfig, error: activeError } = await supabase
+        .from('app_configuration')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+      
+      console.log('Active configuration:', activeConfig)
+      console.log('Active query error:', activeError)
+      
+      return {
+        allConfigs,
+        allError,
+        activeConfig,
+        activeError
+      }
+    } catch (error) {
+      console.error('Debug method error:', error)
+      return { error }
+    }
+  }
+
+  private convertConfigToKeyValuePairs(config: TaxConfiguration): { key: string; value: string }[] {
+    const pairs: { key: string; value: string }[] = []
+    
+    // PTKP amounts
+    Object.entries(config.ptkp_amounts).forEach(([key, value]) => {
+      pairs.push({ key: `ptkp_${key}`, value: value.toString() })
+    })
+    
+    // Tax brackets
+    Object.entries(config.tax_brackets).forEach(([key, value]) => {
+      pairs.push({ key: `tax_${key}`, value: JSON.stringify(value) })
+    })
+    
+    // BPJS rates
+    pairs.push({ key: 'bpjs_health_employee_rate', value: config.bpjs_rates.health.employee_rate.toString() })
+    pairs.push({ key: 'bpjs_health_company_rate', value: config.bpjs_rates.health.company_rate.toString() })
+    pairs.push({ key: 'bpjs_health_max_salary', value: config.bpjs_rates.health.max_salary.toString() })
+    
+    pairs.push({ key: 'bpjs_jht_employee_rate', value: config.bpjs_rates.employment.jht.employee_rate.toString() })
+    pairs.push({ key: 'bpjs_jht_company_rate', value: config.bpjs_rates.employment.jht.company_rate.toString() })
+    pairs.push({ key: 'bpjs_jp_employee_rate', value: config.bpjs_rates.employment.jp.employee_rate.toString() })
+    pairs.push({ key: 'bpjs_jp_company_rate', value: config.bpjs_rates.employment.jp.company_rate.toString() })
+    pairs.push({ key: 'bpjs_jkk_rate', value: config.bpjs_rates.employment.jkk_rate.toString() })
+    pairs.push({ key: 'bpjs_jkm_rate', value: config.bpjs_rates.employment.jkm_rate.toString() })
+    
+    // Occupational cost
+    pairs.push({ key: 'occupational_cost_rate', value: config.occupational_cost.rate.toString() })
+    pairs.push({ key: 'occupational_cost_max_monthly', value: config.occupational_cost.max_monthly.toString() })
+    
+    // System fields
+    pairs.push({ key: 'effective_date', value: config.effective_date })
+    pairs.push({ key: 'last_updated', value: config.last_updated })
+    pairs.push({ key: 'updated_by', value: config.updated_by })
+    
+    return pairs
+  }
+
   async updateTaxConfiguration(
     config: Partial<TaxConfiguration>, 
     updatedBy: string
@@ -158,24 +334,27 @@ export class TaxConfigService {
         return { success: false, error: validation.error }
       }
 
-      // Deactivate current configuration
+      // Deactivate current configuration entries
       await supabase
         .from('app_configuration')
         .update({ is_active: false })
         .eq('is_active', true)
 
-      // Insert new configuration
+      // Convert config to key-value pairs
+      const keyValuePairs = this.convertConfigToKeyValuePairs(updatedConfig)
+      
+      // Insert new configuration entries
+      const configEntries = keyValuePairs.map(pair => ({
+        key: pair.key,
+        value: pair.value,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }))
+
       const { error } = await supabase
         .from('app_configuration')
-        .insert({
-          ptkp_amounts: updatedConfig.ptkp_amounts,
-          tax_brackets: updatedConfig.tax_brackets,
-          bpjs_rates: updatedConfig.bpjs_rates,
-          occupational_cost: updatedConfig.occupational_cost,
-          effective_date: updatedConfig.effective_date,
-          updated_by: updatedBy,
-          is_active: true
-        })
+        .insert(configEntries)
 
       if (error) throw error
 
@@ -255,16 +434,42 @@ export class TaxConfigService {
     }
   }
 
-  async getConfigurationHistory(limit: number = 10): Promise<AppConfiguration[]> {
+  async getConfigurationHistory(limit: number = 10): Promise<TaxConfiguration[]> {
     try {
-      const { data, error } = await supabase
+      // Get distinct configuration timestamps
+      const { data: timestamps, error: timestampError } = await supabase
         .from('app_configuration')
-        .select('*')
+        .select('created_at')
         .order('created_at', { ascending: false })
-        .limit(limit)
+        .limit(limit * 50) // Get more records to account for multiple keys per config
 
-      if (error) throw error
-      return data || []
+      if (timestampError) throw timestampError
+      
+      // Get unique timestamps (each config update creates multiple rows)
+      const uniqueTimestamps = [...new Set(timestamps?.map(t => t.created_at))].slice(0, limit)
+      
+      const configurations: TaxConfiguration[] = []
+      
+      // For each timestamp, get all configuration entries
+      for (const timestamp of uniqueTimestamps) {
+        const { data: configData, error } = await supabase
+          .from('app_configuration')
+          .select('key, value, created_at, updated_at')
+          .eq('created_at', timestamp)
+
+        if (error) continue // Skip failed entries
+        
+        if (configData && configData.length > 0) {
+          try {
+            const config = this.parseKeyValueConfiguration(configData)
+            configurations.push(config)
+          } catch (parseError) {
+            console.warn('Error parsing historical configuration:', parseError)
+          }
+        }
+      }
+
+      return configurations
     } catch (error) {
       console.error('Error fetching configuration history:', error)
       return []
@@ -309,6 +514,81 @@ export class TaxConfigService {
     } catch (error) {
       console.error('Error getting occupational cost settings:', error)
       return this.getDefaultConfiguration().occupational_cost
+    }
+  }
+
+  async initializeDatabaseWithDefaults(): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('Initializing database with default tax configuration...')
+      
+      // Check if there's any existing configuration
+      const { data: existingData, error: checkError } = await supabase
+        .from('app_configuration')
+        .select('id')
+        .limit(1)
+
+      if (checkError) {
+        console.error('Error checking existing configuration:', checkError)
+        throw checkError
+      }
+
+      if (existingData && existingData.length > 0) {
+        console.log('Configuration already exists, skipping initialization')
+        return { success: true }
+      }
+
+      // Get default configuration
+      const defaultConfig = this.getDefaultConfiguration()
+      
+      // Convert to key-value pairs
+      const keyValuePairs = this.convertConfigToKeyValuePairs(defaultConfig)
+      
+      // Insert configuration entries
+      const configEntries = keyValuePairs.map(pair => ({
+        key: pair.key,
+        value: pair.value,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }))
+
+      const { error: insertError } = await supabase
+        .from('app_configuration')
+        .insert(configEntries)
+
+      if (insertError) {
+        console.error('Error inserting default configuration:', insertError)
+        throw insertError
+      }
+
+      console.log('Successfully initialized database with default tax configuration')
+      return { success: true }
+    } catch (error: any) {
+      console.error('Error initializing database with defaults:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  async reinitializeDatabase(): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('Reinitializing database with fresh default configuration...')
+      
+      // Delete all existing configuration
+      const { error: deleteError } = await supabase
+        .from('app_configuration')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000') // Delete all rows
+
+      if (deleteError) {
+        console.error('Error clearing existing configuration:', deleteError)
+        throw deleteError
+      }
+
+      // Initialize with defaults
+      return await this.initializeDatabaseWithDefaults()
+    } catch (error: any) {
+      console.error('Error reinitializing database:', error)
+      return { success: false, error: error.message }
     }
   }
 }

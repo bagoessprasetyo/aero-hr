@@ -149,6 +149,40 @@ export const formatCurrency = (value: number): string => {
   }).format(value)
 }
 
+// Parse formatted currency string back to number
+export const parseCurrency = (formatted: string): number => {
+  if (!formatted || formatted.trim() === '') return 0
+  
+  // Remove currency symbols, spaces, and non-numeric characters except dots and commas
+  const cleaned = formatted
+    .replace(/[^\d.,]/g, '') // Remove everything except digits, dots, and commas
+    .replace(/\./g, '') // Remove thousands separators (dots in ID locale)
+    .replace(/,/g, '.') // Convert decimal comma to dot if any
+  
+  const parsed = parseFloat(cleaned) || 0
+  return parsed
+}
+
+// Format number for input display (without currency symbol, with thousands separators)
+export const formatCurrencyInput = (value: number): string => {
+  if (isNaN(value) || value === 0) return ''
+  
+  return new Intl.NumberFormat('id-ID', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
+// Format number for input placeholder or display
+export const formatCurrencyPlaceholder = (value: number): string => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value).replace('IDR', 'Rp').trim()
+}
+
 export const formatEmployeeId = (value: string): string => {
   return value.toUpperCase().replace(/[^A-Z0-9]/g, '')
 }
